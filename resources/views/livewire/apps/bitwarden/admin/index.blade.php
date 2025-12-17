@@ -9,7 +9,33 @@ state(['activeTab' => 'einstellungen']);
 ?>
 
 <x-intranet-app-bitwarden::bitwarden-layout heading="Bitwarden App" subheading="Admin">
-    <flux:tab.group>
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <flux:card href="{{ route('apps.bitwarden.admin.groups.index') }}" class="cursor-pointer hover:shadow-lg transition-shadow">
+            <div class="flex items-center gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
+                    <flux:icon icon="user-group" class="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                    <flux:heading size="md">Gruppen</flux:heading>
+                    <flux:text class="text-gray-600 dark:text-gray-400">Gruppen verwalten</flux:text>
+                </div>
+            </div>
+        </flux:card>
+
+        <flux:card href="{{ route('apps.bitwarden.admin.members.index') }}" class="cursor-pointer hover:shadow-lg transition-shadow">
+            <div class="flex items-center gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900">
+                    <flux:icon icon="users" class="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                    <flux:heading size="md">Mitglieder</flux:heading>
+                    <flux:text class="text-gray-600 dark:text-gray-400">Mitglieder verwalten</flux:text>
+                </div>
+            </div>
+        </flux:card>
+    </div>
+
+    <flux:tab.group class="mt-6">
         <flux:tabs wire:model="activeTab">
             <flux:tab name="einstellungen" icon="cog-6-tooth">Einstellungen</flux:tab>
             <flux:tab name="statistiken" icon="chart-bar">Statistiken</flux:tab>

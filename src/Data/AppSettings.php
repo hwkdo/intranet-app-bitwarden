@@ -19,5 +19,6 @@ class AppSettings extends BaseAppSettings
         
         #[Description('Liste der erlaubten Bereiche')]
         public array $allowedAreas = ['public', 'private'],
+        
     ) {}
 }
