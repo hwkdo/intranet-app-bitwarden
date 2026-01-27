@@ -40,4 +40,9 @@ class IntranetAppBitwarden implements IntranetAppInterface
     {
         return \Hwkdo\IntranetAppBitwarden\Data\AppSettings::class;
     }
+
+    public static function mcpServers(): array
+    {
+        return [];
+    }
 }
