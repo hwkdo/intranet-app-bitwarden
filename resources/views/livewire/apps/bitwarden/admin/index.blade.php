@@ -10,7 +10,7 @@ state(['activeTab' => 'einstellungen']);
 
 <x-intranet-app-bitwarden::bitwarden-layout heading="Bitwarden App" subheading="Admin">
     <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <flux:card href="{{ route('apps.bitwarden.admin.groups.index') }}" class="cursor-pointer hover:shadow-lg transition-shadow">
+        <flux:card href="{{ route('apps.bitwarden.admin.groups.index') }}" class="glass-card cursor-pointer hover:shadow-lg transition-shadow">
             <div class="flex items-center gap-4">
                 <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                     <flux:icon icon="user-group" class="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -22,7 +22,7 @@ state(['activeTab' => 'einstellungen']);
             </div>
         </flux:card>
 
-        <flux:card href="{{ route('apps.bitwarden.admin.members.index') }}" class="cursor-pointer hover:shadow-lg transition-shadow">
+        <flux:card href="{{ route('apps.bitwarden.admin.members.index') }}" class="glass-card cursor-pointer hover:shadow-lg transition-shadow">
             <div class="flex items-center gap-4">
                 <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900">
                     <flux:icon icon="users" class="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -53,7 +53,7 @@ state(['activeTab' => 'einstellungen']);
 
         <flux:tab.panel name="statistiken">
             <div style="min-height: 400px;">
-                <flux:card>
+                <flux:card class="glass-card">
                     <flux:heading size="lg" class="mb-4">App-Statistiken</flux:heading>
                     <flux:text class="mb-6">
                         Übersicht über die Nutzung der Bitwarden App.

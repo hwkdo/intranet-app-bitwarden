@@ -142,7 +142,7 @@ mount(function () {
 ?>
 
 <x-intranet-app-bitwarden::bitwarden-layout heading="Gruppen verwalten" subheading="Bitwarden Gruppen">
-    <flux:card>
+    <flux:card class="glass-card">
         <div class="flex items-center justify-between mb-6">
             <flux:heading size="lg">Gruppen</flux:heading>
             <flux:button href="{{ route('apps.bitwarden.admin.groups.create') }}" variant="primary" icon="plus">

@@ -134,7 +134,7 @@ mount(function () {
 ?>
 <div>
 <x-intranet-app-bitwarden::bitwarden-layout heading="Mitglieder verwalten" subheading="Bitwarden Mitglieder">
-    <flux:card>
+    <flux:card class="glass-card">
         <div class="flex items-center justify-between mb-6">
             <flux:heading size="lg">Mitglieder</flux:heading>
             <flux:button href="{{ route('apps.bitwarden.admin.members.invite') }}" variant="primary" icon="plus">

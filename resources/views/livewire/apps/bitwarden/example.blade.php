@@ -14,7 +14,7 @@ state(['exampleData' => [
 ?>
 
 <x-intranet-app-bitwarden::bitwarden-layout heading="Beispiel-Seite" subheading="Demonstration der Bitwarden-Funktionalität">
-    <flux:card>
+    <flux:card class="glass-card">
         <flux:heading size="lg" class="mb-4">Beispiel-Content</flux:heading>
         <flux:text class="mb-6">
             Diese Seite zeigt, wie eine typische App-Seite aussehen könnte.

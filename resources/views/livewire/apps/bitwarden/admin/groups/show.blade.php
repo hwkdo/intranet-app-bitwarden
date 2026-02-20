@@ -73,13 +73,13 @@ mount(function (string $groupId) {
 
 <x-intranet-app-bitwarden::bitwarden-layout heading="Gruppe anzeigen" subheading="Bitwarden Gruppen">
     @if($loading)
-        <flux:card>
+        <flux:card class="glass-card">
             <div class="flex items-center justify-center py-12">
                 <flux:icon.loading class="h-8 w-8" />
             </div>
         </flux:card>
     @elseif($group)
-        <flux:card>
+        <flux:card class="glass-card">
             <div class="space-y-6">
                 <div>
                     <flux:heading size="lg">{{ $group['name'] ?? 'Unbenannt' }}</flux:heading>

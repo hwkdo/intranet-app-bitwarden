@@ -121,7 +121,7 @@ $save = function () {
 ?>
 <div>
 <x-intranet-app-bitwarden::bitwarden-layout heading="Neue Collection erstellen" subheading="Bitwarden Collections">
-    <flux:card>
+    <flux:card class="glass-card">
         <form wire:submit="save" class="space-y-6">
             <flux:field>
                 <flux:label>Name</flux:label>

@@ -36,13 +36,13 @@ mount(function (string $collectionId) {
 
 <x-intranet-app-bitwarden::bitwarden-layout heading="Collection anzeigen" subheading="Bitwarden Collections">
     @if($loading)
-        <flux:card>
+        <flux:card class="glass-card">
             <div class="flex items-center justify-center py-12">
                 <flux:icon.loading class="h-8 w-8" />
             </div>
         </flux:card>
     @elseif($collection)
-        <flux:card>
+        <flux:card class="glass-card">
             <div class="space-y-6">
                 <div>
                     <flux:heading size="lg">{{ $collection['name'] ?? 'Unbenannt' }}</flux:heading>

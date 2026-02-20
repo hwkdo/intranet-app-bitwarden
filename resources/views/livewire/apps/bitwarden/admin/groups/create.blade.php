@@ -47,7 +47,7 @@ $save = function () {
 ?>
 
 <x-intranet-app-bitwarden::bitwarden-layout heading="Neue Gruppe erstellen" subheading="Bitwarden Gruppen">
-    <flux:card>
+    <flux:card class="glass-card">
         <form wire:submit="save" class="space-y-6">
             <flux:field>
                 <flux:label>Name</flux:label>

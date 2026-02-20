@@ -198,7 +198,7 @@ mount(function () {
 ?>
 
 <x-intranet-app-bitwarden::bitwarden-layout heading="Collections verwalten" subheading="Bitwarden Collections">
-    <flux:card>
+    <flux:card class="glass-card">
         <div class="flex items-center justify-between mb-6">
             <flux:heading size="lg">Collections</flux:heading>
             <flux:button href="{{ route('apps.bitwarden.admin.collections.create') }}" variant="primary" icon="plus">

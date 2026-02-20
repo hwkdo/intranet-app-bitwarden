@@ -46,13 +46,13 @@ mount(function (string $memberId) {
 
 <x-intranet-app-bitwarden::bitwarden-layout heading="Mitglied anzeigen" subheading="Bitwarden Mitglieder">
     @if($loading)
-        <flux:card>
+        <flux:card class="glass-card">
             <div class="flex items-center justify-center py-12">
                 <flux:icon.loading class="h-8 w-8" />
             </div>
         </flux:card>
     @elseif($member)
-        <flux:card>
+        <flux:card class="glass-card">
             <div class="space-y-6">
                 <div>
                     <flux:heading size="lg">{{ $member['name'] ?? 'Unbekannt' }}</flux:heading>
@@ -139,7 +139,7 @@ mount(function (string $memberId) {
             </div>
         </flux:card>
     @else
-        <flux:card>
+        <flux:card class="glass-card">
             <flux:callout variant="danger" icon="exclamation-triangle">
                 Mitglied nicht gefunden (ID: {{ $memberId ?? 'unbekannt' }})
                 @if(config('app.debug'))

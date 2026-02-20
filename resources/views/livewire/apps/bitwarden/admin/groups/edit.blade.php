@@ -165,13 +165,13 @@ $save = function () {
 
 <x-intranet-app-bitwarden::bitwarden-layout heading="Gruppe bearbeiten" subheading="Bitwarden Gruppen">
     @if($loading)
-        <flux:card>
+        <flux:card class="glass-card">
             <div class="flex items-center justify-center py-12">
                 <flux:icon.loading class="h-8 w-8" />
             </div>
         </flux:card>
     @else
-        <flux:card>
+        <flux:card class="glass-card">
             <form wire:submit="save" class="space-y-6">
                 <flux:field>
                     <flux:label>Name</flux:label>

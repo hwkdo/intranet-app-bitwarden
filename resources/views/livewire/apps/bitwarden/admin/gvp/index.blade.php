@@ -335,7 +335,7 @@ $deleteGroup = function (int $gvpId) {
 ?>
 <div>
 <x-intranet-app-bitwarden::bitwarden-layout heading="GVP verwalten" subheading="Bitwarden GVP">
-    <flux:card>
+    <flux:card class="glass-card">
         <div class="flex items-center justify-between mb-6">
             <flux:heading size="lg">GVPs</flux:heading>
         </div>

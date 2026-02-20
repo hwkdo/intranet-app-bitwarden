@@ -93,13 +93,13 @@ $save = function () {
 
 <x-intranet-app-bitwarden::bitwarden-layout heading="Mitglied bearbeiten" subheading="Bitwarden Mitglieder">
     @if($loading)
-        <flux:card>
+        <flux:card class="glass-card">
             <div class="flex items-center justify-center py-12">
                 <flux:icon.loading class="h-8 w-8" />
             </div>
         </flux:card>
     @elseif($member)
-        <flux:card>
+        <flux:card class="glass-card">
             <div class="mb-6">
                 <flux:heading size="lg">{{ $member['name'] ?? 'Unbekannt' }}</flux:heading>
                 <flux:text class="text-gray-600">{{ $member['email'] ?? '-' }}</flux:text>
