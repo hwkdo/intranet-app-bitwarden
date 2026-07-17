@@ -4,12 +4,19 @@ namespace Hwkdo\IntranetAppBitwarden\Services;
 
 use App\Models\Gvp;
 use Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService;
+use Hwkdo\BitwardenLaravel\Services\BitwardenVaultApiService;
 use Illuminate\Support\Facades\Log;
 
 class GvpBitwardenMembershipService
 {
+    /**
+     * Bitwarden OrganizationUserStatusType: Accepted (Einladung angenommen, noch nicht bestätigt).
+     */
+    private const MEMBER_STATUS_ACCEPTED = 1;
+
     public function __construct(
         protected BitwardenPublicApiService $apiService,
+        protected BitwardenVaultApiService $vaultApiService,
     ) {}
 
     public function syncGroupMembers(Gvp $gvp): void
@@ -74,6 +81,8 @@ class GvpBitwardenMembershipService
             $updatedMembers = $this->apiService->getMembers();
             $allMembersByEmail = $this->extractMemberMap($updatedMembers);
 
+            $this->confirmAcceptedMembers($updatedMembers, $emails, $gvp->id, $groupId);
+
             $userIds = [];
 
             foreach ($emails as $lowerEmail => $originalEmail) {
@@ -93,7 +102,89 @@ class GvpBitwardenMembershipService
     }
 
     /**
-     * @param  array  $apiResponse
+     * Bestätigt alle GVP-Mitglieder mit Status Accepted über die Vault API.
+     *
+     * @param  array<string, string>  $emails  email_lower => original email
+     */
+    protected function confirmAcceptedMembers(array $apiResponse, array $emails, int $gvpId, string $groupId): void
+    {
+        $memberIdsToConfirm = $this->extractAcceptedMemberIds($apiResponse, $emails);
+
+        if ($memberIdsToConfirm === []) {
+            return;
+        }
+
+        try {
+            $this->vaultApiService->ensureUnlocked();
+        } catch (\Throwable $exception) {
+            Log::error('GvpBitwardenMembershipService: Vault konnte nicht entsperrt werden', [
+                'gvp_id' => $gvpId,
+                'group_id' => $groupId,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return;
+        }
+
+        foreach ($memberIdsToConfirm as $memberId) {
+            try {
+                $this->vaultApiService->confirmMember($memberId);
+            } catch (\Throwable $exception) {
+                Log::error('GvpBitwardenMembershipService: Fehler beim Bestätigen eines Mitglieds', [
+                    'gvp_id' => $gvpId,
+                    'group_id' => $groupId,
+                    'member_id' => $memberId,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, string>  $emails  email_lower => original email
+     * @return list<string>
+     */
+    protected function extractAcceptedMemberIds(array $apiResponse, array $emails): array
+    {
+        $members = $apiResponse;
+
+        if (isset($members['data']) && is_array($members['data'])) {
+            $members = $members['data'];
+        }
+
+        if (! is_array($members)) {
+            return [];
+        }
+
+        $ids = [];
+
+        foreach ($members as $member) {
+            if (! is_array($member)) {
+                continue;
+            }
+
+            if (! isset($member['email'], $member['id'])) {
+                continue;
+            }
+
+            $email = strtolower(trim((string) $member['email']));
+            $id = (string) $member['id'];
+
+            if ($email === '' || $id === '' || ! isset($emails[$email])) {
+                continue;
+            }
+
+            if ((int) ($member['status'] ?? -1) !== self::MEMBER_STATUS_ACCEPTED) {
+                continue;
+            }
+
+            $ids[] = $id;
+        }
+
+        return $ids;
+    }
+
+    /**
      * @return array<string, string> email_lower => memberId
      */
     protected function extractMemberMap(array $apiResponse): array
@@ -132,4 +223,3 @@ class GvpBitwardenMembershipService
         return $map;
     }
 }
-

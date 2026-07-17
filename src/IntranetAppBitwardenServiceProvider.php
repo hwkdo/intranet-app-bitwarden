@@ -4,7 +4,9 @@ namespace Hwkdo\IntranetAppBitwarden;
 
 use App\Models\Gvp;
 use App\Models\User;
+use Hwkdo\IntranetAppBitwarden\Commands\SyncGvpBitwardenMembershipsCommand;
 use Hwkdo\IntranetAppBitwarden\Services\GvpBitwardenMembershipService;
+use Illuminate\Console\Scheduling\Schedule;
 use Livewire\Volt\Volt;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -22,6 +24,7 @@ class IntranetAppBitwardenServiceProvider extends PackageServiceProvider
             ->name('intranet-app-bitwarden')
             ->hasConfigFile()
             ->hasViews()
+            ->hasCommand(SyncGvpBitwardenMembershipsCommand::class)
             ->discoversMigrations();
     }
 
@@ -86,6 +89,9 @@ class IntranetAppBitwardenServiceProvider extends PackageServiceProvider
         });
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+
+        $this->app->resolving(Schedule::class, function (): void {
+            require __DIR__.'/../routes/console.php';
+        });
     }
 }
-
