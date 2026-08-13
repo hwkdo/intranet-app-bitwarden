@@ -1,11 +1,14 @@
 <?php
 
 use Flux\Flux;
-use Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService;
+use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
+use Illuminate\Pagination\LengthAwarePaginator;
 
-use function Livewire\Volt\{state, title, computed, on, mount};
+use function Livewire\Volt\{state, title, computed, on, mount, usesPagination};
 
 title('Bitwarden - Mitglieder verwalten');
+
+usesPagination();
 
 state([
     'members' => [],
@@ -13,9 +16,10 @@ state([
     'search' => '',
     'includeCollections' => false,
     'includeGroups' => false,
+    'onlyCompleteUsers' => true,
 ]);
 
-$apiService = computed(fn() => app(BitwardenPublicApiService::class));
+$apiService = computed(fn () => app(BitwardenManagementApiInterface::class));
 
 $loadMembers = function () {
     $this->loading = true;
@@ -24,7 +28,7 @@ $loadMembers = function () {
             includeCollections: $this->includeCollections,
             includeGroups: $this->includeGroups
         );
-        
+
         // Stelle sicher, dass wir ein Array haben
         if (is_array($response)) {
             // Prüfe, ob die Daten in einem verschachtelten Format sind (z.B. ['data' => [...]])
@@ -45,12 +49,12 @@ $loadMembers = function () {
         } else {
             $this->members = [];
         }
-        
+
         // Stelle sicher, dass members ein numerisch indiziertes Array ist
         if (! empty($this->members) && is_array($this->members)) {
             $this->members = array_values($this->members);
         }
-        
+
         // Log für Debugging
         \Illuminate\Support\Facades\Log::debug('Bitwarden Members loaded', [
             'count' => count($this->members),
@@ -82,38 +86,76 @@ $deleteMember = function (string $memberId) {
     }
 };
 
+$memberDisplayName = function (array $member): string {
+    $name = trim((string) ($member['name'] ?? ''));
+
+    if ($name !== '' && strcasecmp($name, 'Unbekannt') !== 0) {
+        return $name;
+    }
+
+    $email = trim((string) ($member['email'] ?? ''));
+
+    return $email !== '' ? $email : 'Unbekannt';
+};
+
+$isCompleteMember = function (array $member): bool {
+    // „Vollständig“ = bestätigt/angenommen (nicht nur eingeladen).
+    // Status: 0=Invited, 1=Accepted, 2=Confirmed, …
+    $status = $member['status'] ?? null;
+
+    if ($status !== null && (int) $status === 0) {
+        return false;
+    }
+
+    $name = trim((string) ($member['name'] ?? ''));
+    $email = trim((string) ($member['email'] ?? ''));
+
+    return ($name !== '' && strcasecmp($name, 'Unbekannt') !== 0) || $email !== '';
+};
+
 $filteredMembers = computed(function () {
-    if (empty($this->members) || ! is_array($this->members)) {
-        return [];
+    $members = [];
+
+    if (! empty($this->members) && is_array($this->members)) {
+        $members = array_values(array_filter(
+            $this->members,
+            fn ($member) => ! empty($member) && is_array($member)
+        ));
     }
 
-    // Filtere null-Werte heraus
-    $members = array_filter($this->members, fn($member) => ! empty($member) && is_array($member));
-
-    if (empty($members)) {
-        return [];
+    if ($this->onlyCompleteUsers) {
+        $members = array_values(array_filter(
+            $members,
+            fn (array $member): bool => $this->isCompleteMember($member)
+        ));
     }
 
-    if (empty($this->search)) {
-        return array_values($members);
+    if (! empty($this->search)) {
+        $search = strtolower($this->search);
+
+        $members = array_values(array_filter($members, function ($member) use ($search) {
+            $name = strtolower($member['name'] ?? '');
+            $email = strtolower($member['email'] ?? '');
+
+            return str_contains($name, $search) || str_contains($email, $search);
+        }));
     }
 
-    $search = strtolower($this->search);
-    
-    $filtered = array_filter($members, function ($member) use ($search) {
-        if (empty($member) || ! is_array($member)) {
-            return false;
-        }
-        
-        $name = strtolower($member['name'] ?? '');
-        $email = strtolower($member['email'] ?? '');
-        
-        return str_contains($name, $search) || str_contains($email, $search);
-    });
-    
-    return array_values($filtered);
+    $perPage = 20;
+    $page = $this->getPage();
+    $items = collect($members);
+
+    return new LengthAwarePaginator(
+        $items->forPage($page, $perPage)->values(),
+        $items->count(),
+        $perPage,
+        $page,
+        [
+            'path' => LengthAwarePaginator::resolveCurrentPath(),
+            'pageName' => 'page',
+        ],
+    );
 });
-
 
 on(['member-created', 'member-updated' => function () {
     $this->loadMembers();
@@ -125,6 +167,14 @@ $updatedIncludeCollections = function () {
 
 $updatedIncludeGroups = function () {
     $this->loadMembers();
+};
+
+$updatedSearch = function () {
+    $this->resetPage();
+};
+
+$updatedOnlyCompleteUsers = function () {
+    $this->resetPage();
 };
 
 mount(function () {
@@ -142,13 +192,14 @@ mount(function () {
             </flux:button>
         </div>
 
-        <div class="flex gap-4 mb-6">
+        <div class="flex flex-wrap items-center gap-4 mb-6">
             <flux:input
                 wire:model.live.debounce.300ms="search"
                 placeholder="Mitglieder durchsuchen..."
                 icon="magnifying-glass"
-                class="flex-1"
+                class="flex-1 min-w-64"
             />
+            <flux:checkbox wire:model.live="onlyCompleteUsers" label="Nur vollständige User" />
             <flux:checkbox wire:model.live="includeCollections" label="Collections anzeigen" />
             <flux:checkbox wire:model.live="includeGroups" label="Gruppen anzeigen" />
         </div>
@@ -158,7 +209,7 @@ mount(function () {
                 <div class="text-xs">
                     <strong>Debug Info:</strong><br>
                     Members Count: {{ count($this->members) }}<br>
-                    Filtered Count: {{ count($this->filteredMembers ?? []) }}<br>
+                    Filtered Count: {{ $this->filteredMembers->total() }}<br>
                     First Member: {{ json_encode($this->members[0] ?? null, JSON_PRETTY_PRINT) }}
                 </div>
             </flux:callout>
@@ -168,14 +219,14 @@ mount(function () {
             <div class="flex items-center justify-center py-12">
                 <flux:icon.loading class="h-8 w-8" />
             </div>
-        @elseif(empty($this->filteredMembers))
+        @elseif($this->filteredMembers->isEmpty())
             <flux:callout variant="info" icon="information-circle">
                 @if(empty($search))
                     Keine Mitglieder gefunden.
                     @if(config('app.debug'))
                         <div class="mt-2 text-xs">
-                            Debug: members count = {{ count($this->members ?? []) }}, 
-                            filtered count = {{ count($this->filteredMembers ?? []) }}
+                            Debug: members count = {{ count($this->members ?? []) }},
+                            filtered count = {{ $this->filteredMembers->total() }}
                         </div>
                     @endif
                 @else
@@ -183,7 +234,7 @@ mount(function () {
                 @endif
             </flux:callout>
         @else
-            <flux:table>
+            <flux:table :paginate="$this->filteredMembers">
                 <flux:table.columns>
                     <flux:table.column>Name</flux:table.column>
                     <flux:table.column>E-Mail</flux:table.column>
@@ -203,7 +254,7 @@ mount(function () {
                         @if(!empty($member) && !empty($memberId))
                         <flux:table.row wire:key="member-{{ $memberId }}">
                             <flux:table.cell>
-                                <flux:heading size="sm">{{ $member['name'] ?? 'Unbekannt' }}</flux:heading>
+                                <flux:heading size="sm">{{ $this->memberDisplayName($member) }}</flux:heading>
                             </flux:table.cell>
                             <flux:table.cell>
                                 {{ $member['email'] ?? '-' }}

@@ -1,21 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Hwkdo\IntranetAppBitwarden\Services;
 
 use App\Models\Gvp;
-use Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService;
+use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 use Hwkdo\BitwardenLaravel\Services\BitwardenVaultApiService;
 use Illuminate\Support\Facades\Log;
 
 class GvpBitwardenMembershipService
 {
     /**
-     * Bitwarden OrganizationUserStatusType: Accepted (Einladung angenommen, noch nicht bestätigt).
+     * Bitwarden OrganizationUserStatusType.
      */
+    private const MEMBER_STATUS_INVITED = 0;
+
     private const MEMBER_STATUS_ACCEPTED = 1;
 
     public function __construct(
-        protected BitwardenPublicApiService $apiService,
+        protected BitwardenManagementApiInterface $apiService,
         protected BitwardenVaultApiService $vaultApiService,
     ) {}
 
@@ -81,7 +85,7 @@ class GvpBitwardenMembershipService
             $updatedMembers = $this->apiService->getMembers();
             $allMembersByEmail = $this->extractMemberMap($updatedMembers);
 
-            $this->confirmAcceptedMembers($updatedMembers, $emails, $gvp->id, $groupId);
+            $this->confirmPendingMembers($updatedMembers, $emails, $gvp->id, $groupId);
 
             $userIds = [];
 
@@ -102,13 +106,13 @@ class GvpBitwardenMembershipService
     }
 
     /**
-     * Bestätigt alle GVP-Mitglieder mit Status Accepted über die Vault API.
+     * Bestätigt GVP-Mitglieder über die Vault API, die Confirm brauchen.
      *
      * @param  array<string, string>  $emails  email_lower => original email
      */
-    protected function confirmAcceptedMembers(array $apiResponse, array $emails, int $gvpId, string $groupId): void
+    protected function confirmPendingMembers(array $apiResponse, array $emails, int $gvpId, string $groupId): void
     {
-        $memberIdsToConfirm = $this->extractAcceptedMemberIds($apiResponse, $emails);
+        $memberIdsToConfirm = $this->extractMemberIdsNeedingConfirm($apiResponse, $emails);
 
         if ($memberIdsToConfirm === []) {
             return;
@@ -141,10 +145,14 @@ class GvpBitwardenMembershipService
     }
 
     /**
+     * Confirm nötig bei:
+     * - Status Accepted (1), oder
+     * - Status Invited (0) mit gesetzter userId und hasMasterPassword (Vaultwarden-Quirk nach Registrierung).
+     *
      * @param  array<string, string>  $emails  email_lower => original email
      * @return list<string>
      */
-    protected function extractAcceptedMemberIds(array $apiResponse, array $emails): array
+    protected function extractMemberIdsNeedingConfirm(array $apiResponse, array $emails): array
     {
         $members = $apiResponse;
 
@@ -174,7 +182,7 @@ class GvpBitwardenMembershipService
                 continue;
             }
 
-            if ((int) ($member['status'] ?? -1) !== self::MEMBER_STATUS_ACCEPTED) {
+            if (! $this->memberNeedsConfirm($member)) {
                 continue;
             }
 
@@ -182,6 +190,27 @@ class GvpBitwardenMembershipService
         }
 
         return $ids;
+    }
+
+    /**
+     * @param  array<string, mixed>  $member
+     */
+    protected function memberNeedsConfirm(array $member): bool
+    {
+        $status = (int) ($member['status'] ?? -1);
+
+        if ($status === self::MEMBER_STATUS_ACCEPTED) {
+            return true;
+        }
+
+        if ($status !== self::MEMBER_STATUS_INVITED) {
+            return false;
+        }
+
+        $userId = trim((string) ($member['userId'] ?? ''));
+        $hasMasterPassword = filter_var($member['hasMasterPassword'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        return $userId !== '' && $hasMasterPassword;
     }
 
     /**

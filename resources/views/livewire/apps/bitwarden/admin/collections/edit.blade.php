@@ -1,7 +1,7 @@
 <?php
 
 use Flux\Flux;
-use Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService;
+use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 use Hwkdo\BitwardenLaravel\Services\BitwardenVaultApiService;
 
 use function Livewire\Volt\{state, title, computed, mount};
@@ -20,7 +20,7 @@ state([
     'allMembers' => [],
 ]);
 
-$apiService = computed(fn() => app(BitwardenPublicApiService::class));
+$apiService = computed(fn() => app(BitwardenManagementApiInterface::class));
 $vaultApiService = computed(fn() => app(BitwardenVaultApiService::class));
 
 // Wenn der Name geändert wird, setze externalId automatisch auf den neuen Namen
@@ -262,7 +262,9 @@ $save = function () {
                                 @if(!empty($member) && is_array($member))
                                     @php
                                         $memberId = $member['id'] ?? null;
-                                        $memberName = $member['name'] ?? 'Unbekannt';
+                                        $memberName = trim((string) ($member['name'] ?? '')) !== ''
+                                            ? $member['name']
+                                            : ($member['email'] ?? 'Unbekannt');
                                         $memberEmail = $member['email'] ?? '';
                                         $displayName = $memberName;
                                         if (!empty($memberEmail)) {

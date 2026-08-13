@@ -1,7 +1,7 @@
 <?php
 
 use Flux\Flux;
-use Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService;
+use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 
 use function Livewire\Volt\{state, title};
 
@@ -15,7 +15,7 @@ state([
     'loading' => false,
 ]);
 
-$apiService = fn() => app(BitwardenPublicApiService::class);
+$apiService = fn() => app(BitwardenManagementApiInterface::class);
 
 $save = function () {
     $this->validate([

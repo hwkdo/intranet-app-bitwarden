@@ -1,7 +1,7 @@
 <?php
 
 use Flux\Flux;
-use Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService;
+use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 
 use function Livewire\Volt\{state, title, computed, on, mount};
 
@@ -13,7 +13,7 @@ state([
     'search' => '',
 ]);
 
-$apiService = computed(fn() => app(BitwardenPublicApiService::class));
+$apiService = computed(fn() => app(BitwardenManagementApiInterface::class));
 
 $loadGroups = function () {
     $this->loading = true;

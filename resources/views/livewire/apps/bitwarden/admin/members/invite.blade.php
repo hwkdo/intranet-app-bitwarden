@@ -1,7 +1,7 @@
 <?php
 
 use Flux\Flux;
-use Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService;
+use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 
 use function Livewire\Volt\{state, title, computed};
 
@@ -16,7 +16,7 @@ state([
     'loading' => false,
 ]);
 
-$apiService = computed(fn() => app(BitwardenPublicApiService::class));
+$apiService = computed(fn() => app(BitwardenManagementApiInterface::class));
 $availableGroups = computed(function () {
     try {
         return $this->apiService()->getGroups();

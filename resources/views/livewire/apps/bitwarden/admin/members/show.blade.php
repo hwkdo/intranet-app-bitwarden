@@ -1,7 +1,7 @@
 <?php
 
 use Flux\Flux;
-use Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService;
+use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 
 use function Livewire\Volt\{state, title, computed, mount};
 
@@ -13,7 +13,7 @@ state([
     'loading' => false,
 ]);
 
-$apiService = computed(fn() => app(BitwardenPublicApiService::class));
+$apiService = computed(fn() => app(BitwardenManagementApiInterface::class));
 
 
 mount(function (string $memberId) {
@@ -55,7 +55,7 @@ mount(function (string $memberId) {
         <flux:card class="glass-card">
             <div class="space-y-6">
                 <div>
-                    <flux:heading size="lg">{{ $member['name'] ?? 'Unbekannt' }}</flux:heading>
+                    <flux:heading size="lg">{{ trim((string) ($member['name'] ?? '')) !== '' ? $member['name'] : ($member['email'] ?? 'Unbekannt') }}</flux:heading>
                     <flux:text class="text-gray-600 mt-1">{{ $member['email'] ?? '-' }}</flux:text>
                 </div>
 

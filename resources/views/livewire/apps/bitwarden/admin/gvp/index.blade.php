@@ -2,7 +2,7 @@
 
 use App\Models\Gvp;
 use Flux\Flux;
-use Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService;
+use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 use Hwkdo\BitwardenLaravel\Services\BitwardenVaultApiService;
 
 use function Livewire\Volt\{state, title, computed, mount};
@@ -16,7 +16,7 @@ state([
     'search' => '',
 ]);
 
-$apiService = computed(fn() => app(BitwardenPublicApiService::class));
+$apiService = computed(fn() => app(BitwardenManagementApiInterface::class));
 $vaultApiService = computed(fn() => app(BitwardenVaultApiService::class));
 
 $gvps = computed(fn() => Gvp::all());

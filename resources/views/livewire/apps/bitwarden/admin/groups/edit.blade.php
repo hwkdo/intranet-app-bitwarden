@@ -1,7 +1,7 @@
 <?php
 
 use Flux\Flux;
-use Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService;
+use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 
 use function Livewire\Volt\{state, title, mount};
 
@@ -19,7 +19,7 @@ state([
     'allMembers' => [],
 ]);
 
-$apiService = fn() => app(BitwardenPublicApiService::class);
+$apiService = fn() => app(BitwardenManagementApiInterface::class);
 
 mount(function (string $groupId) {
     $this->groupId = $groupId;
@@ -199,7 +199,9 @@ $save = function () {
                                 @if(!empty($member) && is_array($member))
                                     @php
                                         $memberId = $member['id'] ?? $member['userId'] ?? $member['memberId'] ?? null;
-                                        $memberName = $member['name'] ?? 'Unbekannt';
+                                        $memberName = trim((string) ($member['name'] ?? '')) !== ''
+                                            ? $member['name']
+                                            : ($member['email'] ?? 'Unbekannt');
                                         $memberEmail = $member['email'] ?? '';
                                         $displayName = $memberName;
                                         if (!empty($memberEmail)) {

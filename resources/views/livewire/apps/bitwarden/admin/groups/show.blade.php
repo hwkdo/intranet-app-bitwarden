@@ -1,7 +1,7 @@
 <?php
 
 use Flux\Flux;
-use Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService;
+use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 
 use function Livewire\Volt\{state, title, mount};
 
@@ -15,7 +15,7 @@ state([
     'loading' => false,
 ]);
 
-$apiService = fn() => app(BitwardenPublicApiService::class);
+$apiService = fn() => app(BitwardenManagementApiInterface::class);
 
 mount(function (string $groupId) {
     $this->groupId = $groupId;
@@ -120,7 +120,7 @@ mount(function (string $groupId) {
                                         $member = $allMembers[$userId] ?? null;
                                     @endphp
                                     <flux:table.row wire:key="user-{{ $userId }}">
-                                        <flux:table.cell>{{ $member['name'] ?? 'Unbekannt' }}</flux:table.cell>
+                                        <flux:table.cell>{{ trim((string) ($member['name'] ?? '')) !== '' ? $member['name'] : ($member['email'] ?? 'Unbekannt') }}</flux:table.cell>
                                         <flux:table.cell>{{ $member['email'] ?? '-' }}</flux:table.cell>
                                         <flux:table.cell>
                                             <flux:badge variant="neutral">{{ $member['type'] ?? 'User' }}</flux:badge>

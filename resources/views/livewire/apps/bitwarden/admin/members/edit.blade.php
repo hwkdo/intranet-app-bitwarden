@@ -1,7 +1,7 @@
 <?php
 
 use Flux\Flux;
-use Hwkdo\BitwardenLaravel\Services\BitwardenPublicApiService;
+use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 
 use function Livewire\Volt\{state, title, computed, mount};
 
@@ -17,7 +17,7 @@ state([
     'loading' => false,
 ]);
 
-$apiService = computed(fn() => app(BitwardenPublicApiService::class));
+$apiService = computed(fn() => app(BitwardenManagementApiInterface::class));
 $availableGroups = computed(function () {
     try {
         return $this->apiService()->getGroups();
@@ -101,7 +101,7 @@ $save = function () {
     @elseif($member)
         <flux:card class="glass-card">
             <div class="mb-6">
-                <flux:heading size="lg">{{ $member['name'] ?? 'Unbekannt' }}</flux:heading>
+                <flux:heading size="lg">{{ trim((string) ($member['name'] ?? '')) !== '' ? $member['name'] : ($member['email'] ?? 'Unbekannt') }}</flux:heading>
                 <flux:text class="text-gray-600">{{ $member['email'] ?? '-' }}</flux:text>
             </div>
 
