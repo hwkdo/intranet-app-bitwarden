@@ -33,7 +33,7 @@ class IntranetAppBitwarden implements IntranetAppInterface
     
     public static function userSettingsClass(): ?string
     {
-        return \Hwkdo\IntranetAppBitwarden\Data\UserSettings::class;
+        return null;
     }
     
     public static function appSettingsClass(): ?string
