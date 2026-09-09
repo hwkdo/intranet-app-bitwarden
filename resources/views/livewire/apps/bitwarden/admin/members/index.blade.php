@@ -2,6 +2,7 @@
 
 use Flux\Flux;
 use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
+use Hwkdo\BitwardenLaravel\Services\BitwardenVaultApiService;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 use function Livewire\Volt\{state, title, computed, on, mount, usesPagination};
@@ -17,9 +18,13 @@ state([
     'includeCollections' => false,
     'includeGroups' => false,
     'onlyCompleteUsers' => true,
+    'onlyRecoveryEnrolled' => false,
+    'onlyNeedsConfirm' => false,
 ]);
 
 $apiService = computed(fn () => app(BitwardenManagementApiInterface::class));
+
+$vaultApiService = computed(fn () => app(BitwardenVaultApiService::class));
 
 $loadMembers = function () {
     $this->loading = true;
@@ -86,6 +91,20 @@ $deleteMember = function (string $memberId) {
     }
 };
 
+$confirmMember = function (string $memberId) {
+    $this->loading = true;
+    try {
+        $this->vaultApiService()->ensureUnlocked();
+        $this->vaultApiService()->confirmMember($memberId);
+        Flux::toast('Mitglied erfolgreich bestätigt', variant: 'success');
+        $this->loadMembers();
+    } catch (\Exception $e) {
+        Flux::toast('Fehler beim Bestätigen des Mitglieds: '.$e->getMessage(), variant: 'danger');
+    } finally {
+        $this->loading = false;
+    }
+};
+
 $memberDisplayName = function (array $member): string {
     $name = trim((string) ($member['name'] ?? ''));
 
@@ -96,6 +115,36 @@ $memberDisplayName = function (array $member): string {
     $email = trim((string) ($member['email'] ?? ''));
 
     return $email !== '' ? $email : 'Unbekannt';
+};
+
+$memberStatus = function (array $member): int {
+    return (int) ($member['status'] ?? -1);
+};
+
+$memberNeedsConfirm = function (array $member): bool {
+    $status = $this->memberStatus($member);
+
+    if ($status === 1) {
+        return true;
+    }
+
+    if ($status !== 0) {
+        return false;
+    }
+
+    $userId = trim((string) ($member['userId'] ?? ''));
+    $hasMasterPassword = filter_var($member['hasMasterPassword'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+    return $userId !== '' && $hasMasterPassword;
+};
+
+$memberStatusLabel = function (array $member): string {
+    return match ($this->memberStatus($member)) {
+        0 => 'Eingeladen',
+        1 => 'Angenommen',
+        2 => 'Bestätigt',
+        default => '–',
+    };
 };
 
 $isCompleteMember = function (array $member): bool {
@@ -113,6 +162,10 @@ $isCompleteMember = function (array $member): bool {
     return ($name !== '' && strcasecmp($name, 'Unbekannt') !== 0) || $email !== '';
 };
 
+$isRecoveryEnrolled = function (array $member): bool {
+    return (bool) ($member['resetPasswordEnrolled'] ?? $member['ResetPasswordEnrolled'] ?? false);
+};
+
 $filteredMembers = computed(function () {
     $members = [];
 
@@ -127,6 +180,20 @@ $filteredMembers = computed(function () {
         $members = array_values(array_filter(
             $members,
             fn (array $member): bool => $this->isCompleteMember($member)
+        ));
+    }
+
+    if ($this->onlyRecoveryEnrolled) {
+        $members = array_values(array_filter(
+            $members,
+            fn (array $member): bool => $this->isRecoveryEnrolled($member)
+        ));
+    }
+
+    if ($this->onlyNeedsConfirm) {
+        $members = array_values(array_filter(
+            $members,
+            fn (array $member): bool => $this->memberNeedsConfirm($member)
         ));
     }
 
@@ -177,6 +244,14 @@ $updatedOnlyCompleteUsers = function () {
     $this->resetPage();
 };
 
+$updatedOnlyRecoveryEnrolled = function () {
+    $this->resetPage();
+};
+
+$updatedOnlyNeedsConfirm = function () {
+    $this->resetPage();
+};
+
 mount(function () {
     $this->loadMembers();
 });
@@ -200,6 +275,8 @@ mount(function () {
                 class="flex-1 min-w-64"
             />
             <flux:checkbox wire:model.live="onlyCompleteUsers" label="Nur vollständige User" />
+            <flux:checkbox wire:model.live="onlyRecoveryEnrolled" label="Nur mit Account Recovery" />
+            <flux:checkbox wire:model.live="onlyNeedsConfirm" label="Nur unbestätigt" />
             <flux:checkbox wire:model.live="includeCollections" label="Collections anzeigen" />
             <flux:checkbox wire:model.live="includeGroups" label="Gruppen anzeigen" />
         </div>
@@ -238,8 +315,10 @@ mount(function () {
                 <flux:table.columns>
                     <flux:table.column>Name</flux:table.column>
                     <flux:table.column>E-Mail</flux:table.column>
+                    <flux:table.column>Status</flux:table.column>
                     <flux:table.column>Typ</flux:table.column>
                     <flux:table.column>Zugriff auf alle</flux:table.column>
+                    <flux:table.column>Account Recovery</flux:table.column>
                     @if($includeGroups)
                         <flux:table.column>Gruppen</flux:table.column>
                     @endif
@@ -250,6 +329,8 @@ mount(function () {
                         @php
                             // Versuche verschiedene ID-Felder
                             $memberId = $member['id'] ?? $member['userId'] ?? $member['memberId'] ?? null;
+                            $needsConfirm = $this->memberNeedsConfirm($member);
+                            $status = $this->memberStatus($member);
                         @endphp
                         @if(!empty($member) && !empty($memberId))
                         <flux:table.row wire:key="member-{{ $memberId }}">
@@ -258,6 +339,17 @@ mount(function () {
                             </flux:table.cell>
                             <flux:table.cell>
                                 {{ $member['email'] ?? '-' }}
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                @if($status === 2)
+                                    <flux:badge variant="success" icon="check">{{ $this->memberStatusLabel($member) }}</flux:badge>
+                                @elseif($needsConfirm)
+                                    <flux:badge variant="warning" icon="exclamation-triangle">{{ $this->memberStatusLabel($member) }}</flux:badge>
+                                @elseif($status === 0)
+                                    <flux:badge variant="neutral">{{ $this->memberStatusLabel($member) }}</flux:badge>
+                                @else
+                                    <flux:badge variant="neutral">{{ $this->memberStatusLabel($member) }}</flux:badge>
+                                @endif
                             </flux:table.cell>
                             <flux:table.cell>
                                 <flux:badge variant="neutral">
@@ -281,6 +373,13 @@ mount(function () {
                                     <flux:badge variant="neutral">Nein</flux:badge>
                                 @endif
                             </flux:table.cell>
+                            <flux:table.cell>
+                                @if($this->isRecoveryEnrolled($member))
+                                    <flux:badge variant="success" icon="key">Registriert</flux:badge>
+                                @else
+                                    <flux:badge variant="neutral">Nicht registriert</flux:badge>
+                                @endif
+                            </flux:table.cell>
                             @if($includeGroups)
                                 <flux:table.cell>
                                     {{ count($member['groups'] ?? []) }} Gruppen
@@ -288,6 +387,17 @@ mount(function () {
                             @endif
                             <flux:table.cell>
                                 <div class="flex items-center justify-end gap-2">
+                                    @if($needsConfirm)
+                                        <flux:button
+                                            wire:click="confirmMember('{{ $memberId }}')"
+                                            wire:confirm="Mitglied wirklich bestätigen? Danach erhält der User Zugriff auf die Organisation."
+                                            variant="primary"
+                                            icon="check"
+                                            size="sm"
+                                        >
+                                            Bestätigen
+                                        </flux:button>
+                                    @endif
                                     <flux:button
                                         href="{{ route('apps.bitwarden.admin.members.show', ['memberId' => $memberId]) }}"
                                         variant="ghost"

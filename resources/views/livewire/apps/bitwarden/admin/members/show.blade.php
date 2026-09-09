@@ -89,6 +89,17 @@ mount(function (string $memberId) {
                             @endif
                         </div>
                     </div>
+
+                    <div>
+                        <flux:label>Account Recovery</flux:label>
+                        <div class="mt-1">
+                            @if($member['resetPasswordEnrolled'] ?? $member['ResetPasswordEnrolled'] ?? false)
+                                <flux:badge variant="success" icon="key">Registriert</flux:badge>
+                            @else
+                                <flux:badge variant="neutral">Nicht registriert</flux:badge>
+                            @endif
+                        </div>
+                    </div>
                 </div>
 
                 @if(!empty($member['groups']))
