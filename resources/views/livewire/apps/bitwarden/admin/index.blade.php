@@ -33,6 +33,18 @@ state(['activeTab' => 'einstellungen']);
                 </div>
             </div>
         </flux:card>
+
+        <flux:card href="{{ route('apps.bitwarden.admin.members.pending') }}" class="glass-card cursor-pointer hover:shadow-lg transition-shadow">
+            <div class="flex items-center gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900">
+                    <flux:icon icon="clock" class="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                    <flux:heading size="md">Unbestätigt</flux:heading>
+                    <flux:text class="text-gray-600 dark:text-gray-400">Confirm ausstehend</flux:text>
+                </div>
+            </div>
+        </flux:card>
     </div>
 
     <flux:tab.group class="mt-6">

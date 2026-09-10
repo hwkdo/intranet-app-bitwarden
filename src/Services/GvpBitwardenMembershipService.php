@@ -6,21 +6,14 @@ namespace Hwkdo\IntranetAppBitwarden\Services;
 
 use App\Models\Gvp;
 use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
-use Hwkdo\BitwardenLaravel\Services\BitwardenVaultApiService;
+use Hwkdo\BitwardenLaravel\Support\OrganizationMemberStatus;
 use Illuminate\Support\Facades\Log;
 
 class GvpBitwardenMembershipService
 {
-    /**
-     * Bitwarden OrganizationUserStatusType.
-     */
-    private const MEMBER_STATUS_INVITED = 0;
-
-    private const MEMBER_STATUS_ACCEPTED = 1;
-
     public function __construct(
         protected BitwardenManagementApiInterface $apiService,
-        protected BitwardenVaultApiService $vaultApiService,
+        protected ConfirmPendingMembersService $confirmPendingMembers,
     ) {}
 
     public function syncGroupMembers(Gvp $gvp): void
@@ -85,7 +78,10 @@ class GvpBitwardenMembershipService
             $updatedMembers = $this->apiService->getMembers();
             $allMembersByEmail = $this->extractMemberMap($updatedMembers);
 
-            $this->confirmPendingMembers($updatedMembers, $emails, $gvp->id, $groupId);
+            $this->confirmPendingMembers->confirmFromMembersList(
+                $updatedMembers,
+                array_keys($emails),
+            );
 
             $userIds = [];
 
@@ -106,141 +102,15 @@ class GvpBitwardenMembershipService
     }
 
     /**
-     * Bestätigt GVP-Mitglieder über die Vault API, die Confirm brauchen.
-     *
-     * @param  array<string, string>  $emails  email_lower => original email
-     */
-    protected function confirmPendingMembers(array $apiResponse, array $emails, int $gvpId, string $groupId): void
-    {
-        $memberIdsToConfirm = $this->extractMemberIdsNeedingConfirm($apiResponse, $emails);
-
-        if ($memberIdsToConfirm === []) {
-            return;
-        }
-
-        try {
-            $this->vaultApiService->ensureUnlocked();
-        } catch (\Throwable $exception) {
-            Log::error('GvpBitwardenMembershipService: Vault konnte nicht entsperrt werden', [
-                'gvp_id' => $gvpId,
-                'group_id' => $groupId,
-                'message' => $exception->getMessage(),
-            ]);
-
-            return;
-        }
-
-        foreach ($memberIdsToConfirm as $memberId) {
-            try {
-                $this->vaultApiService->confirmMember($memberId);
-            } catch (\Throwable $exception) {
-                Log::error('GvpBitwardenMembershipService: Fehler beim Bestätigen eines Mitglieds', [
-                    'gvp_id' => $gvpId,
-                    'group_id' => $groupId,
-                    'member_id' => $memberId,
-                    'message' => $exception->getMessage(),
-                ]);
-            }
-        }
-    }
-
-    /**
-     * Confirm nötig bei:
-     * - Status Accepted (1), oder
-     * - Status Invited (0) mit gesetzter userId und hasMasterPassword (Vaultwarden-Quirk nach Registrierung).
-     *
-     * @param  array<string, string>  $emails  email_lower => original email
-     * @return list<string>
-     */
-    protected function extractMemberIdsNeedingConfirm(array $apiResponse, array $emails): array
-    {
-        $members = $apiResponse;
-
-        if (isset($members['data']) && is_array($members['data'])) {
-            $members = $members['data'];
-        }
-
-        if (! is_array($members)) {
-            return [];
-        }
-
-        $ids = [];
-
-        foreach ($members as $member) {
-            if (! is_array($member)) {
-                continue;
-            }
-
-            if (! isset($member['email'], $member['id'])) {
-                continue;
-            }
-
-            $email = strtolower(trim((string) $member['email']));
-            $id = (string) $member['id'];
-
-            if ($email === '' || $id === '' || ! isset($emails[$email])) {
-                continue;
-            }
-
-            if (! $this->memberNeedsConfirm($member)) {
-                continue;
-            }
-
-            $ids[] = $id;
-        }
-
-        return $ids;
-    }
-
-    /**
-     * @param  array<string, mixed>  $member
-     */
-    protected function memberNeedsConfirm(array $member): bool
-    {
-        $status = (int) ($member['status'] ?? -1);
-
-        if ($status === self::MEMBER_STATUS_ACCEPTED) {
-            return true;
-        }
-
-        if ($status !== self::MEMBER_STATUS_INVITED) {
-            return false;
-        }
-
-        $userId = trim((string) ($member['userId'] ?? ''));
-        $hasMasterPassword = filter_var($member['hasMasterPassword'] ?? false, FILTER_VALIDATE_BOOLEAN);
-
-        return $userId !== '' && $hasMasterPassword;
-    }
-
-    /**
      * @return array<string, string> email_lower => memberId
      */
     protected function extractMemberMap(array $apiResponse): array
     {
-        $members = $apiResponse;
-
-        if (isset($members['data']) && is_array($members['data'])) {
-            $members = $members['data'];
-        }
-
-        if (! is_array($members)) {
-            return [];
-        }
-
         $map = [];
 
-        foreach ($members as $member) {
-            if (! is_array($member)) {
-                continue;
-            }
-
-            if (! isset($member['email'], $member['id'])) {
-                continue;
-            }
-
-            $email = trim((string) $member['email']);
-            $id = (string) $member['id'];
+        foreach (OrganizationMemberStatus::unwrapMembers($apiResponse) as $member) {
+            $email = trim((string) ($member['email'] ?? ''));
+            $id = OrganizationMemberStatus::id($member);
 
             if ($email === '' || $id === '') {
                 continue;

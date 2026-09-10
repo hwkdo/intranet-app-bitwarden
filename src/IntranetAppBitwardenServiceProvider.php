@@ -4,6 +4,7 @@ namespace Hwkdo\IntranetAppBitwarden;
 
 use App\Models\Gvp;
 use App\Models\User;
+use Hwkdo\IntranetAppBitwarden\Commands\ConfirmPendingMembersCommand;
 use Hwkdo\IntranetAppBitwarden\Commands\SyncGvpBitwardenMembershipsCommand;
 use Hwkdo\IntranetAppBitwarden\Services\GvpBitwardenMembershipService;
 use Illuminate\Console\Scheduling\Schedule;
@@ -24,7 +25,10 @@ class IntranetAppBitwardenServiceProvider extends PackageServiceProvider
             ->name('intranet-app-bitwarden')
             ->hasConfigFile()
             ->hasViews()
-            ->hasCommand(SyncGvpBitwardenMembershipsCommand::class)
+            ->hasCommands([
+                SyncGvpBitwardenMembershipsCommand::class,
+                ConfirmPendingMembersCommand::class,
+            ])
             ->discoversMigrations();
     }
 

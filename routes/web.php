@@ -27,6 +27,8 @@ Route::middleware(['web','auth','can:manage-app-bitwarden'])->group(function () 
     // Mitglieder-Routes
     Volt::route('apps/bitwarden/admin/members', 'apps.bitwarden.admin.members.index')->name('apps.bitwarden.admin.members.index');
 
+    Volt::route('apps/bitwarden/admin/members/pending', 'apps.bitwarden.admin.members.pending')->name('apps.bitwarden.admin.members.pending');
+
     Volt::route('apps/bitwarden/admin/members/invite', 'apps.bitwarden.admin.members.invite')->name('apps.bitwarden.admin.members.invite');
 
     Volt::route('apps/bitwarden/admin/members/{memberId}', 'apps.bitwarden.admin.members.show')->name('apps.bitwarden.admin.members.show');

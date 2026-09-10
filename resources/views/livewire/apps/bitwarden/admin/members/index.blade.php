@@ -3,6 +3,7 @@
 use Flux\Flux;
 use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 use Hwkdo\BitwardenLaravel\Services\BitwardenVaultApiService;
+use Hwkdo\BitwardenLaravel\Support\OrganizationMemberStatus;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 use function Livewire\Volt\{state, title, computed, on, mount, usesPagination};
@@ -122,27 +123,14 @@ $memberStatus = function (array $member): int {
 };
 
 $memberNeedsConfirm = function (array $member): bool {
-    $status = $this->memberStatus($member);
-
-    if ($status === 1) {
-        return true;
-    }
-
-    if ($status !== 0) {
-        return false;
-    }
-
-    $userId = trim((string) ($member['userId'] ?? ''));
-    $hasMasterPassword = filter_var($member['hasMasterPassword'] ?? false, FILTER_VALIDATE_BOOLEAN);
-
-    return $userId !== '' && $hasMasterPassword;
+    return OrganizationMemberStatus::needsConfirm($member);
 };
 
 $memberStatusLabel = function (array $member): string {
     return match ($this->memberStatus($member)) {
-        0 => 'Eingeladen',
-        1 => 'Angenommen',
-        2 => 'Bestätigt',
+        OrganizationMemberStatus::INVITED => 'Eingeladen',
+        OrganizationMemberStatus::ACCEPTED => 'Angenommen',
+        OrganizationMemberStatus::CONFIRMED => 'Bestätigt',
         default => '–',
     };
 };

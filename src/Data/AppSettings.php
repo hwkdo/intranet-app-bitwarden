@@ -37,5 +37,11 @@ class AppSettings extends BaseAppSettings
 
         #[Description('Native-Treiber: User-API-Key Client-Secret')]
         public string $bitwardenNativeApiClientSecret = '',
+
+        #[Description('Automatische Bestätigung unbestätigter Bitwarden-Mitglieder (Scheduler alle 15 Min)')]
+        public bool $autoConfirmEnabled = true,
+
+        #[Description('Tage ohne Confirm bis UI-Markierung „lange unbestätigt“ (Confirm läuft weiter)')]
+        public int $pendingConfirmStaleDays = 7,
     ) {}
 }

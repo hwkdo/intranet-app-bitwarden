@@ -10,7 +10,7 @@ class SyncGvpBitwardenMembershipsCommand extends Command
 {
     protected $signature = 'intranet-app-bitwarden:sync-gvp-memberships';
 
-    protected $description = 'Synchronisiert Bitwarden-Gruppenmitglieder aller GVPs und bestätigt Accepted-Mitglieder.';
+    protected $description = 'Synchronisiert Bitwarden-Gruppenmitglieder aller GVPs (Invite + Gruppenzuordnung; Confirm übernimmt confirm-pending-members).';
 
     public function handle(GvpBitwardenMembershipService $service): int
     {

@@ -5,12 +5,27 @@
 ])
 
 @php
+    $pendingNavBadge = null;
+
+    if (auth()->user()?->can('manage-app-bitwarden')) {
+        try {
+            $pendingCount = app(\Hwkdo\IntranetAppBitwarden\Services\ConfirmPendingMembersService::class)->pendingCount();
+            if ($pendingCount > 0) {
+                $pendingNavBadge = $pendingCount;
+            }
+        } catch (\Throwable) {
+            $pendingNavBadge = null;
+        }
+    }
+
     $defaultNavItems = [
         ['label' => 'Übersicht', 'href' => route('apps.bitwarden.index'), 'icon' => 'home', 'description' => 'Zurück zur Übersicht', 'buttonText' => 'Übersicht anzeigen'],
-        ['label' => 'Beispielseite', 'href' => route('apps.bitwarden.example'), 'icon' => 'document-text', 'description' => 'Beispielseite anzeigen', 'buttonText' => 'Beispielseite öffnen'],        ['label' => 'App-Info', 'href' => route('apps.bitwarden.info'), 'icon' => 'information-circle', 'description' => 'Installierte Version und Release-Historie', 'buttonText' => 'App-Info anzeigen'],
+        ['label' => 'Beispielseite', 'href' => route('apps.bitwarden.example'), 'icon' => 'document-text', 'description' => 'Beispielseite anzeigen', 'buttonText' => 'Beispielseite öffnen'],
+        ['label' => 'App-Info', 'href' => route('apps.bitwarden.info'), 'icon' => 'information-circle', 'description' => 'Installierte Version und Release-Historie', 'buttonText' => 'App-Info anzeigen'],
         ['label' => 'Admin', 'href' => route('apps.bitwarden.admin.index'), 'icon' => 'shield-check', 'description' => 'Administrationsbereich verwalten', 'buttonText' => 'Admin öffnen', 'permission' => 'manage-app-bitwarden'],
         ['label' => 'Gruppen', 'href' => route('apps.bitwarden.admin.groups.index'), 'icon' => 'user-group', 'description' => 'Gruppen verwalten', 'buttonText' => 'Gruppen öffnen', 'permission' => 'manage-app-bitwarden'],
         ['label' => 'Mitglieder', 'href' => route('apps.bitwarden.admin.members.index'), 'icon' => 'users', 'description' => 'Mitglieder verwalten', 'buttonText' => 'Mitglieder öffnen', 'permission' => 'manage-app-bitwarden'],
+        ['label' => 'Unbestätigt', 'href' => route('apps.bitwarden.admin.members.pending'), 'icon' => 'clock', 'description' => 'Mitglieder mit ausstehendem Confirm', 'buttonText' => 'Unbestätigte öffnen', 'permission' => 'manage-app-bitwarden', 'badge' => $pendingNavBadge, 'badgeColor' => 'red'],
         ['label' => 'Collections', 'href' => route('apps.bitwarden.admin.collections.index'), 'icon' => 'folder', 'description' => 'Collections verwalten', 'buttonText' => 'Collections öffnen', 'permission' => 'manage-app-bitwarden'],
         ['label' => 'GVP', 'href' => route('apps.bitwarden.admin.gvp.index'), 'icon' => 'building-office', 'description' => 'GVP verwalten', 'buttonText' => 'GVP öffnen', 'permission' => 'manage-app-bitwarden']
     ];
