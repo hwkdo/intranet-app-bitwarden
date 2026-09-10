@@ -43,7 +43,7 @@ mount(function (string $memberId) {
 });
 
 ?>
-
+<div>
 <x-intranet-app-bitwarden::bitwarden-layout heading="Mitglied anzeigen" subheading="Bitwarden Mitglieder">
     @if($loading)
         <flux:card class="glass-card">
@@ -167,4 +167,4 @@ mount(function (string $memberId) {
         </flux:card>
     @endif
 </x-intranet-app-bitwarden::bitwarden-layout>
-
+</div>

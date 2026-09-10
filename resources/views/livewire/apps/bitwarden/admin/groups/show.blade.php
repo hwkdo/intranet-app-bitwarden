@@ -70,7 +70,7 @@ mount(function (string $groupId) {
 });
 
 ?>
-
+<div>
 <x-intranet-app-bitwarden::bitwarden-layout heading="Gruppe anzeigen" subheading="Bitwarden Gruppen">
     @if($loading)
         <flux:card class="glass-card">
@@ -144,4 +144,4 @@ mount(function (string $groupId) {
         </flux:card>
     @endif
 </x-intranet-app-bitwarden::bitwarden-layout>
-
+</div>

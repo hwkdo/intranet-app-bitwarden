@@ -128,10 +128,6 @@ $loadCollections = function () {
 };
 
 $deleteCollection = function (string $collectionId) {
-    if (! confirm('Möchten Sie diese Collection wirklich löschen?')) {
-        return;
-    }
-
     $this->loading = true;
     try {
         $this->vaultApiService()->deleteCollection($collectionId);
@@ -196,7 +192,7 @@ mount(function () {
 });
 
 ?>
-
+<div>
 <x-intranet-app-bitwarden::bitwarden-layout heading="Collections verwalten" subheading="Bitwarden Collections">
     <flux:card class="glass-card">
         <div class="flex items-center justify-between mb-6">
@@ -303,3 +299,4 @@ mount(function () {
     </flux:card>
 </x-intranet-app-bitwarden::bitwarden-layout>
 
+</div>

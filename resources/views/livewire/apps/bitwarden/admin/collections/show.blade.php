@@ -33,7 +33,7 @@ mount(function (string $collectionId) {
 });
 
 ?>
-
+<div>
 <x-intranet-app-bitwarden::bitwarden-layout heading="Collection anzeigen" subheading="Bitwarden Collections">
     @if($loading)
         <flux:card class="glass-card">
@@ -177,4 +177,4 @@ mount(function (string $collectionId) {
         </flux:card>
     @endif
 </x-intranet-app-bitwarden::bitwarden-layout>
-
+</div>

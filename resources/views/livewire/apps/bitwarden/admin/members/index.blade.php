@@ -3,6 +3,7 @@
 use Flux\Flux;
 use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 use Hwkdo\BitwardenLaravel\Services\BitwardenVaultApiService;
+use Hwkdo\BitwardenLaravel\Services\VaultwardenAdminApiService;
 use Hwkdo\BitwardenLaravel\Support\OrganizationMemberStatus;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -26,6 +27,8 @@ state([
 $apiService = computed(fn () => app(BitwardenManagementApiInterface::class));
 
 $vaultApiService = computed(fn () => app(BitwardenVaultApiService::class));
+
+$adminApiService = computed(fn () => app(VaultwardenAdminApiService::class));
 
 $loadMembers = function () {
     $this->loading = true;
@@ -83,10 +86,23 @@ $deleteMember = function (string $memberId) {
     $this->loading = true;
     try {
         $this->apiService()->deleteMember($memberId);
-        Flux::toast('Mitglied erfolgreich gelöscht', variant: 'success');
+        Flux::toast('Mitglied aus der Organisation entfernt', variant: 'success');
         $this->loadMembers();
     } catch (\Exception $e) {
-        Flux::toast('Fehler beim Löschen des Mitglieds: '.$e->getMessage(), variant: 'danger');
+        Flux::toast('Fehler beim Entfernen aus der Organisation: '.$e->getMessage(), variant: 'danger');
+    } finally {
+        $this->loading = false;
+    }
+};
+
+$deleteUserAccount = function (string $userId) {
+    $this->loading = true;
+    try {
+        $this->adminApiService()->deleteUserAccount($userId);
+        Flux::toast('Benutzerkonto vollständig gelöscht', variant: 'success');
+        $this->loadMembers();
+    } catch (\Exception $e) {
+        Flux::toast('Fehler beim Löschen des Kontos: '.$e->getMessage(), variant: 'danger');
     } finally {
         $this->loading = false;
     }
@@ -315,8 +331,9 @@ mount(function () {
                 <flux:table.rows>
                     @foreach($this->filteredMembers as $member)
                         @php
-                            // Versuche verschiedene ID-Felder
-                            $memberId = $member['id'] ?? $member['userId'] ?? $member['memberId'] ?? null;
+                            // id = Organization-User-ID; userId = globales Vaultwarden-Konto
+                            $memberId = $member['id'] ?? $member['memberId'] ?? null;
+                            $userId = $member['userId'] ?? null;
                             $needsConfirm = $this->memberNeedsConfirm($member);
                             $status = $this->memberStatus($member);
                         @endphp
@@ -406,14 +423,26 @@ mount(function () {
                                     </flux:button>
                                     <flux:button
                                         wire:click="deleteMember('{{ $memberId }}')"
-                                        wire:confirm="Möchten Sie dieses Mitglied wirklich löschen?"
+                                        wire:confirm="Mitglied nur aus der Organisation entfernen? Das Bitwarden-Konto bleibt bestehen."
                                         variant="ghost"
-                                        icon="trash"
+                                        icon="user-minus"
                                         size="sm"
-                                        class="text-red-600 hover:text-red-700"
+                                        class="text-amber-600 hover:text-amber-700"
                                     >
-                                        Löschen
+                                        Aus Org. entfernen
                                     </flux:button>
+                                    @if(! empty($userId))
+                                        <flux:button
+                                            wire:click="deleteUserAccount('{{ $userId }}')"
+                                            wire:confirm="ACHTUNG: Das gesamte Vaultwarden-Benutzerkonto unwiderruflich löschen (nicht nur die Org-Mitgliedschaft)?"
+                                            variant="ghost"
+                                            icon="trash"
+                                            size="sm"
+                                            class="text-red-600 hover:text-red-700"
+                                        >
+                                            Konto löschen
+                                        </flux:button>
+                                    @endif
                                 </div>
                             </flux:table.cell>
                         </flux:table.row>

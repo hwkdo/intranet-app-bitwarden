@@ -73,7 +73,7 @@ $save = function () {
 };
 
 ?>
-
+<div>
 <x-intranet-app-bitwarden::bitwarden-layout heading="Mitglied einladen" subheading="Bitwarden Mitglieder">
     <flux:card class="glass-card">
         <form wire:submit="save" class="space-y-6">
@@ -151,4 +151,4 @@ $save = function () {
         </form>
     </flux:card>
 </x-intranet-app-bitwarden::bitwarden-layout>
-
+</div>

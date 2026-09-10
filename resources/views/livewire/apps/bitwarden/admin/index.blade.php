@@ -7,7 +7,7 @@ title('Bitwarden - Admin');
 state(['activeTab' => 'einstellungen']);
 
 ?>
-
+<div>
 <x-intranet-app-bitwarden::bitwarden-layout heading="Bitwarden App" subheading="Admin">
     <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <flux:card href="{{ route('apps.bitwarden.admin.groups.index') }}" class="glass-card cursor-pointer hover:shadow-lg transition-shadow">
@@ -101,3 +101,4 @@ state(['activeTab' => 'einstellungen']);
         </flux:tab.panel>
     </flux:tab.group>
 </x-intranet-app-bitwarden::bitwarden-layout>
+</div>

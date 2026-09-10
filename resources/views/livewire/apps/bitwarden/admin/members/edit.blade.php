@@ -90,7 +90,7 @@ $save = function () {
 };
 
 ?>
-
+<div>
 <x-intranet-app-bitwarden::bitwarden-layout heading="Mitglied bearbeiten" subheading="Bitwarden Mitglieder">
     @if($loading)
         <flux:card class="glass-card">
@@ -148,4 +148,4 @@ $save = function () {
         </flux:card>
     @endif
 </x-intranet-app-bitwarden::bitwarden-layout>
-
+</div>

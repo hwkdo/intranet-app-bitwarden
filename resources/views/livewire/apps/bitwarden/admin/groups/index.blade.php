@@ -86,10 +86,6 @@ $loadGroups = function () {
 };
 
 $deleteGroup = function (string $groupId) {
-    if (! confirm('Möchten Sie diese Gruppe wirklich löschen?')) {
-        return;
-    }
-
     $this->loading = true;
     try {
         $this->apiService()->deleteGroup($groupId);
@@ -140,7 +136,7 @@ mount(function () {
 });
 
 ?>
-
+<div>
 <x-intranet-app-bitwarden::bitwarden-layout heading="Gruppen verwalten" subheading="Bitwarden Gruppen">
     <flux:card class="glass-card">
         <div class="flex items-center justify-between mb-6">
@@ -256,4 +252,4 @@ mount(function () {
         @endif
     </flux:card>
 </x-intranet-app-bitwarden::bitwarden-layout>
-
+</div>
