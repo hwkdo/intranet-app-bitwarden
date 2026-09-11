@@ -20,6 +20,7 @@
 
     $defaultNavItems = [
         ['label' => 'Übersicht', 'href' => route('apps.bitwarden.index'), 'icon' => 'home', 'description' => 'Zurück zur Übersicht', 'buttonText' => 'Übersicht anzeigen'],
+        ['label' => 'Meine Sammlungen', 'href' => route('apps.bitwarden.meine-sammlungen'), 'icon' => 'folder', 'description' => 'Ihre Gruppen und Collections', 'buttonText' => 'Sammlungen öffnen'],
         ['label' => 'Beispielseite', 'href' => route('apps.bitwarden.example'), 'icon' => 'document-text', 'description' => 'Beispielseite anzeigen', 'buttonText' => 'Beispielseite öffnen'],
         ['label' => 'App-Info', 'href' => route('apps.bitwarden.info'), 'icon' => 'information-circle', 'description' => 'Installierte Version und Release-Historie', 'buttonText' => 'App-Info anzeigen'],
         ['label' => 'Admin', 'href' => route('apps.bitwarden.admin.index'), 'icon' => 'shield-check', 'description' => 'Administrationsbereich verwalten', 'buttonText' => 'Admin öffnen', 'permission' => 'manage-app-bitwarden'],

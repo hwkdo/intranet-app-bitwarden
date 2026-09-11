@@ -1,10 +1,75 @@
 <?php
 
-use function Livewire\Volt\{state, title};
+use Flux\Flux;
+use Hwkdo\IntranetAppBitwarden\Jobs\RunBitwardenFullResetJob;
+use Hwkdo\IntranetAppBitwarden\Services\BitwardenFullResetService;
+use Hwkdo\IntranetAppBitwarden\Support\BitwardenSyncGuard;
+
+use function Livewire\Volt\{state, title, computed};
 
 title('Bitwarden - Admin');
 
-state(['activeTab' => 'einstellungen']);
+state([
+    'activeTab' => 'einstellungen',
+    'resetKeepEmail' => BitwardenFullResetService::DEFAULT_KEEP_EMAIL,
+    'resetDeleteAccounts' => true,
+    'resetConfirmPhrase' => '',
+    'resetLoading' => false,
+]);
+
+$lastResetResult = computed(function () {
+    return app(BitwardenFullResetService::class)->lastResult();
+});
+
+$resetInProgress = computed(function () {
+    return BitwardenSyncGuard::isPaused();
+});
+
+$canSubmitReset = computed(function () {
+    return trim($this->resetConfirmPhrase) === BitwardenFullResetService::CONFIRM_PHRASE
+        && filter_var(trim($this->resetKeepEmail), FILTER_VALIDATE_EMAIL)
+        && ! $this->resetLoading;
+});
+
+$queueFullReset = function () {
+    if (trim($this->resetConfirmPhrase) !== BitwardenFullResetService::CONFIRM_PHRASE) {
+        Flux::toast('Bitte die Bestätigungsphrase exakt eingeben: '.BitwardenFullResetService::CONFIRM_PHRASE, variant: 'danger');
+
+        return;
+    }
+
+    $keepEmail = strtolower(trim($this->resetKeepEmail));
+
+    if (! filter_var($keepEmail, FILTER_VALIDATE_EMAIL)) {
+        Flux::toast('Ungültige Keep-E-Mail.', variant: 'danger');
+
+        return;
+    }
+
+    $this->resetLoading = true;
+
+    try {
+        RunBitwardenFullResetJob::dispatch(
+            keepEmail: $keepEmail,
+            deleteAccounts: (bool) $this->resetDeleteAccounts,
+            dryRun: false,
+            delayMs: 400,
+            initiatedByUserId: auth()->id(),
+        );
+
+        $this->resetConfirmPhrase = '';
+        unset($this->lastResetResult, $this->resetInProgress);
+
+        Flux::toast(
+            'Full Reset wurde in die Queue gestellt. Fortschritt siehe Laravel-Log / Horizon.',
+            variant: 'warning',
+        );
+    } catch (\Exception $e) {
+        Flux::toast('Full Reset konnte nicht gestartet werden: '.$e->getMessage(), variant: 'danger');
+    } finally {
+        $this->resetLoading = false;
+    }
+};
 
 ?>
 <div>
@@ -51,6 +116,7 @@ state(['activeTab' => 'einstellungen']);
         <flux:tabs wire:model="activeTab">
             <flux:tab name="hintergrundbild" icon="photo">Hintergrundbild</flux:tab>
             <flux:tab name="einstellungen" icon="cog-6-tooth">Einstellungen</flux:tab>
+            <flux:tab name="wartung" icon="exclamation-triangle">Wartung</flux:tab>
             <flux:tab name="statistiken" icon="chart-bar">Statistiken</flux:tab>
         </flux:tabs>
 
@@ -69,6 +135,93 @@ state(['activeTab' => 'einstellungen']);
                     'settingsModelClass' => '\Hwkdo\IntranetAppBitwarden\Models\IntranetAppBitwardenSettings',
                     'appSettingsClass' => '\Hwkdo\IntranetAppBitwarden\Data\AppSettings'
                 ])
+            </div>
+        </flux:tab.panel>
+
+        <flux:tab.panel name="wartung">
+            <div class="space-y-6" style="min-height: 400px;">
+                <flux:callout variant="danger" icon="exclamation-triangle">
+                    <flux:callout.heading>Full Reset</flux:callout.heading>
+                    <flux:callout.text>
+                        Löscht alle Collections und Gruppen in Bitwarden, entfernt alle Org-Mitglieder
+                        außer dem Keep-Konto und leert die Bitwarden-IDs auf allen GVPs.
+                        Der Lauf erfolgt asynchron in der Queue (Rate-Limit ~400&nbsp;ms zwischen API-Calls).
+                    </flux:callout.text>
+                </flux:callout>
+
+                @if($this->resetInProgress)
+                    <flux:callout variant="warning" icon="arrow-path">
+                        Ein Full Reset scheint aktiv oder kürzlich gestartet — bitte Logs/Horizon prüfen.
+                    </flux:callout>
+                @endif
+
+                <flux:card class="glass-card border border-red-300 dark:border-red-800">
+                    <flux:heading size="lg" class="mb-4">Full Reset starten</flux:heading>
+
+                    <div class="space-y-4 max-w-xl">
+                        <flux:field>
+                            <flux:label>Keep-Konto (bleibt erhalten)</flux:label>
+                            <flux:input wire:model="resetKeepEmail" type="email" />
+                            <flux:description>Standard: do.it@hwk-do.de</flux:description>
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:checkbox wire:model="resetDeleteAccounts" label="Vaultwarden-Konten ebenfalls löschen (nicht nur Org-Mitgliedschaft)" />
+                        </flux:field>
+
+                        <flux:field>
+                            <flux:label>Bestätigung</flux:label>
+                            <flux:input
+                                wire:model.live="resetConfirmPhrase"
+                                placeholder="FULL RESET"
+                                autocomplete="off"
+                            />
+                            <flux:description>
+                                Tippen Sie exakt <code>FULL RESET</code>
+                            </flux:description>
+                        </flux:field>
+
+                        <flux:button
+                            variant="danger"
+                            icon="trash"
+                            wire:click="queueFullReset"
+                            wire:confirm="Wirklich Full Reset in die Queue stellen? Das kann nicht rückgängig gemacht werden."
+                            :disabled="! $this->canSubmitReset"
+                            wire:loading.attr="disabled"
+                        >
+                            Full Reset in Queue stellen
+                        </flux:button>
+                    </div>
+                </flux:card>
+
+                @if($this->lastResetResult)
+                    @php($last = $this->lastResetResult)
+                    <flux:card class="glass-card">
+                        <flux:heading size="md" class="mb-3">Letztes Ergebnis</flux:heading>
+                        <flux:text variant="muted" size="sm" class="mb-3">
+                            {{ $last['finished_at'] ?? '—' }}
+                            @if(! empty($last['dry_run']))
+                                · Dry-Run
+                            @endif
+                            · Keep: {{ $last['keep_email'] ?? '—' }}
+                        </flux:text>
+                        <ul class="space-y-1 text-sm">
+                            <li>GVPs geleert: {{ $last['cleared_gvps'] ?? 0 }}</li>
+                            <li>Collections gelöscht: {{ $last['deleted_collections'] ?? 0 }}</li>
+                            <li>Gruppen gelöscht: {{ $last['deleted_groups'] ?? 0 }}</li>
+                            <li>Org-Mitglieder entfernt: {{ $last['removed_org_members'] ?? 0 }}</li>
+                            <li>Konten gelöscht: {{ $last['deleted_user_accounts'] ?? 0 }}</li>
+                            <li>Fehler: {{ $last['failed'] ?? 0 }}</li>
+                        </ul>
+                        @if(! empty($last['errors']))
+                            <div class="mt-4 space-y-1">
+                                @foreach(array_slice($last['errors'], 0, 10) as $error)
+                                    <flux:text class="text-red-600 text-sm">{{ $error }}</flux:text>
+                                @endforeach
+                            </div>
+                        @endif
+                    </flux:card>
+                @endif
             </div>
         </flux:tab.panel>
 

@@ -7,6 +7,7 @@ namespace Hwkdo\IntranetAppBitwarden\Services;
 use App\Models\Gvp;
 use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 use Hwkdo\BitwardenLaravel\Support\OrganizationMemberStatus;
+use Hwkdo\IntranetAppBitwarden\Support\BitwardenMemberEligibility;
 use Illuminate\Support\Facades\Log;
 
 class GvpBitwardenMembershipService
@@ -25,7 +26,10 @@ class GvpBitwardenMembershipService
         $groupId = (string) $gvp->bitwarden_group_id;
 
         try {
-            $members = $gvp->getAllMembersForBitwarden();
+            $members = BitwardenMemberEligibility::filterUsersForGvp(
+                $gvp->getAllMembersForBitwarden(),
+                $gvp,
+            );
 
             $emails = [];
 

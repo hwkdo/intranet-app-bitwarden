@@ -5,8 +5,10 @@ namespace Hwkdo\IntranetAppBitwarden;
 use App\Models\Gvp;
 use App\Models\User;
 use Hwkdo\IntranetAppBitwarden\Commands\ConfirmPendingMembersCommand;
+use Hwkdo\IntranetAppBitwarden\Commands\FullResetBitwardenCommand;
 use Hwkdo\IntranetAppBitwarden\Commands\SyncGvpBitwardenMembershipsCommand;
 use Hwkdo\IntranetAppBitwarden\Services\GvpBitwardenMembershipService;
+use Hwkdo\IntranetAppBitwarden\Support\BitwardenSyncGuard;
 use Illuminate\Console\Scheduling\Schedule;
 use Livewire\Volt\Volt;
 use Spatie\LaravelPackageTools\Package;
@@ -28,6 +30,7 @@ class IntranetAppBitwardenServiceProvider extends PackageServiceProvider
             ->hasCommands([
                 SyncGvpBitwardenMembershipsCommand::class,
                 ConfirmPendingMembersCommand::class,
+                FullResetBitwardenCommand::class,
             ])
             ->discoversMigrations();
     }
@@ -44,6 +47,10 @@ class IntranetAppBitwardenServiceProvider extends PackageServiceProvider
             }
 
             User::created(function (User $user): void {
+                if (BitwardenSyncGuard::isPaused()) {
+                    return;
+                }
+
                 if (! $user->active || $user->gvp_id === null) {
                     return;
                 }
@@ -58,7 +65,16 @@ class IntranetAppBitwardenServiceProvider extends PackageServiceProvider
             });
 
             User::updated(function (User $user): void {
-                if (! $user->wasChanged('gvp_id') && ! $user->wasChanged('active')) {
+                if (BitwardenSyncGuard::isPaused()) {
+                    return;
+                }
+
+                if (
+                    ! $user->wasChanged('gvp_id')
+                    && ! $user->wasChanged('active')
+                    && ! $user->wasChanged('azubi')
+                    && ! $user->wasChanged('praktikant')
+                ) {
                     return;
                 }
 

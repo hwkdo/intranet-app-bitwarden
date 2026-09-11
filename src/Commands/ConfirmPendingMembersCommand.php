@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Hwkdo\IntranetAppBitwarden\Commands;
 
 use Hwkdo\IntranetAppBitwarden\Services\ConfirmPendingMembersService;
+use Hwkdo\IntranetAppBitwarden\Support\BitwardenSyncGuard;
 use Illuminate\Console\Command;
 
 class ConfirmPendingMembersCommand extends Command
@@ -16,6 +17,12 @@ class ConfirmPendingMembersCommand extends Command
 
     public function handle(ConfirmPendingMembersService $service): int
     {
+        if (BitwardenSyncGuard::isPaused()) {
+            $this->warn('Bitwarden-Sync ist pausiert (Full Reset läuft) — abgebrochen.');
+
+            return self::SUCCESS;
+        }
+
         $result = $service->confirmAllPending(
             respectAutoConfirmSetting: ! $this->option('force'),
         );

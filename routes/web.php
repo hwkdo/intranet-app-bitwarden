@@ -7,6 +7,8 @@ use Livewire\Volt\Volt;
 Route::middleware(['web','auth','can:see-app-bitwarden'])->group(function () {        
     Volt::route('apps/bitwarden', 'apps.bitwarden.index')->name('apps.bitwarden.index');
 
+    Volt::route('apps/bitwarden/meine-sammlungen', 'apps.bitwarden.meine-sammlungen')->name('apps.bitwarden.meine-sammlungen');
+
     Volt::route('apps/bitwarden/example', 'apps.bitwarden.example')->name('apps.bitwarden.example');
     Volt::route('apps/bitwarden/info', 'apps.bitwarden.info')->name('apps.bitwarden.info');
 });
