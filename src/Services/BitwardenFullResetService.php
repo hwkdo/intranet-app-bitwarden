@@ -10,6 +10,8 @@ use Hwkdo\BitwardenLaravel\Services\BitwardenVaultApiService;
 use Hwkdo\BitwardenLaravel\Services\VaultwardenAdminApiService;
 use Hwkdo\BitwardenLaravel\Support\ApiResponseNormalizer;
 use Hwkdo\IntranetAppBitwarden\Data\BitwardenFullResetResult;
+use Hwkdo\IntranetAppBitwarden\Models\CustomCollection;
+use Hwkdo\IntranetAppBitwarden\Models\CustomCollectionMember;
 use Hwkdo\IntranetAppBitwarden\Support\BitwardenSyncGuard;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -119,6 +121,26 @@ class BitwardenFullResetService
         }
 
         $result->clearedGvps = $count;
+
+        $this->clearCustomCollections($dryRun, $onProgress);
+    }
+
+    /**
+     * @param  callable(string): void|null  $onProgress
+     */
+    protected function clearCustomCollections(bool $dryRun, ?callable $onProgress): void
+    {
+        $memberCount = CustomCollectionMember::query()->count();
+        $collectionCount = CustomCollection::query()->count();
+
+        $this->progress($onProgress, "Custom-Sammlungen leeren ({$collectionCount} / {$memberCount} Mitglieder)…");
+
+        if ($dryRun || ($collectionCount === 0 && $memberCount === 0)) {
+            return;
+        }
+
+        CustomCollectionMember::query()->delete();
+        CustomCollection::query()->delete();
     }
 
     /**

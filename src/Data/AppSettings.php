@@ -43,5 +43,8 @@ class AppSettings extends BaseAppSettings
 
         #[Description('Tage ohne Confirm bis UI-Markierung „lange unbestätigt“ (Confirm läuft weiter)')]
         public int $pendingConfirmStaleDays = 7,
+
+        #[Description('Nur Vorgesetzte dürfen manuelle Sammlungen erstellen (aus = alle Benutzer)')]
+        public bool $onlySupervisorsCanCreateCustomCollections = true,
     ) {}
 }

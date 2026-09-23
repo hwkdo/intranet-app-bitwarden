@@ -13,6 +13,7 @@ class MemberBitwardenScope
 {
     public function __construct(
         protected SupervisorBitwardenScope $supervisorScope,
+        protected SupervisorCustomCollectionService $customCollectionService,
     ) {}
 
     /**
@@ -43,7 +44,7 @@ class MemberBitwardenScope
     }
 
     /**
-     * Karten für die UI: Direkt-Collection und Gesamt-Collection getrennt.
+     * Karten für die UI: GVP-Collections und manuelle Custom-Collections.
      *
      * @return Collection<int, MeineSammlungCard>
      */
@@ -57,18 +58,27 @@ class MemberBitwardenScope
             $hasGesamt = $gvp->hasBitwardenGesamtCollection();
 
             if ($hasDirect && ! $seesAsGesamtOnly) {
-                $cards[] = new MeineSammlungCard($gvp, isGesamt: false);
+                $cards[] = MeineSammlungCard::forGvp($gvp, isGesamt: false);
             }
 
             if ($hasGesamt && $this->shouldShowGesamtCard($user, $gvp, $seesAsGesamtOnly)) {
-                $cards[] = new MeineSammlungCard($gvp, isGesamt: true);
+                $cards[] = MeineSammlungCard::forGvp($gvp, isGesamt: true);
             }
+        }
+
+        foreach ($this->customCollectionService->collectionsVisibleTo($user) as $custom) {
+            $cards[] = MeineSammlungCard::forCustom($custom);
         }
 
         return collect($cards)
             ->sortBy([
-                fn (MeineSammlungCard $card): string => (string) $card->gvp->kuerzel,
-                fn (MeineSammlungCard $card): string => (string) $card->gvp->nummer,
+                fn (MeineSammlungCard $card): int => $card->isCustom() ? 1 : 0,
+                fn (MeineSammlungCard $card): string => $card->isCustom()
+                    ? mb_strtolower($card->title())
+                    : (string) ($card->gvp?->kuerzel ?? ''),
+                fn (MeineSammlungCard $card): string => $card->isCustom()
+                    ? ''
+                    : (string) ($card->gvp?->nummer ?? ''),
                 fn (MeineSammlungCard $card): int => $card->isGesamt ? 1 : 0,
             ])
             ->values();
