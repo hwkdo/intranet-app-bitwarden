@@ -13,8 +13,9 @@ return [
         'user' => [
             'name' => 'App-Bitwarden-Benutzer',
             'permissions' => [
-                'see-app-bitwarden',                
-            ]
+                'see-app-bitwarden',
+            ],
+            'all_users' => true,
         ],
 ]
 ];
