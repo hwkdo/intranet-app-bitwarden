@@ -8,6 +8,7 @@ use Hwkdo\IntranetAppBase\Data\BackgroundActivityDefinition;
 use Hwkdo\IntranetAppBase\Data\BackgroundActivityFrequency;
 use Hwkdo\IntranetAppBase\Enums\BackgroundActivityCadence;
 use Hwkdo\IntranetAppBitwarden\IntranetAppBitwarden;
+use Hwkdo\IntranetAppBitwarden\Jobs\RunBitwardenFullResetJob;
 
 final class BitwardenBackgroundActivities
 {
@@ -49,6 +50,7 @@ final class BitwardenBackgroundActivities
                 withoutOverlappingMinutes: 1440,
                 sort: 20,
             ),
+            BackgroundActivityDefinition::queued(key: 'bitwarden.full-reset', label: 'Vollständiger Reset', appIdentifier: $id, appName: $name, job: RunBitwardenFullResetJob::class, description: 'Setzt Bitwarden-Mitgliedschaften und Collections neu auf.', sort: 30),
         ];
     }
 }
