@@ -1,10 +1,12 @@
 <?php
 
 namespace Hwkdo\IntranetAppBitwarden;
+use Hwkdo\IntranetAppBase\Interfaces\ProvidesBackgroundActivitiesInterface;
+use Hwkdo\IntranetAppBitwarden\Background\BitwardenBackgroundActivities;
 use Hwkdo\IntranetAppBase\Interfaces\IntranetAppInterface;
 use Illuminate\Support\Collection;
 
-class IntranetAppBitwarden implements IntranetAppInterface 
+class IntranetAppBitwarden implements IntranetAppInterface, ProvidesBackgroundActivitiesInterface 
 {
     public static function app_name(): string
     {
@@ -45,4 +47,11 @@ class IntranetAppBitwarden implements IntranetAppInterface
     {
         return [];
     }
+
+    public static function backgroundActivities(): array
+    {
+        return BitwardenBackgroundActivities::definitions();
+    }
+
+
 }

@@ -9,7 +9,6 @@ use Hwkdo\IntranetAppBitwarden\Commands\FullResetBitwardenCommand;
 use Hwkdo\IntranetAppBitwarden\Commands\SyncGvpBitwardenMembershipsCommand;
 use Hwkdo\IntranetAppBitwarden\Services\GvpBitwardenMembershipService;
 use Hwkdo\IntranetAppBitwarden\Support\BitwardenSyncGuard;
-use Illuminate\Console\Scheduling\Schedule;
 use Livewire\Volt\Volt;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -110,8 +109,5 @@ class IntranetAppBitwardenServiceProvider extends PackageServiceProvider
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
-        $this->app->resolving(Schedule::class, function (): void {
-            require __DIR__.'/../routes/console.php';
-        });
     }
 }

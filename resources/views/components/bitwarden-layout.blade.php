@@ -23,6 +23,7 @@
         ['label' => 'Meine Sammlungen', 'href' => route('apps.bitwarden.meine-sammlungen'), 'icon' => 'folder', 'description' => 'Ihre Gruppen und Collections', 'buttonText' => 'Sammlungen öffnen'],
         ['label' => 'Beispielseite', 'href' => route('apps.bitwarden.example'), 'icon' => 'document-text', 'description' => 'Beispielseite anzeigen', 'buttonText' => 'Beispielseite öffnen'],
         ['label' => 'App-Info', 'href' => route('apps.bitwarden.info'), 'icon' => 'information-circle', 'description' => 'Installierte Version und Release-Historie', 'buttonText' => 'App-Info anzeigen'],
+        ['label' => 'Hintergrund', 'href' => route('apps.bitwarden.admin.background-activities'), 'icon' => 'clock', 'description' => 'Geplante Tasks, Jobs und Versand', 'buttonText' => 'Hintergrund öffnen', 'permission' => 'manage-app-bitwarden'],
         ['label' => 'Admin', 'href' => route('apps.bitwarden.admin.index'), 'icon' => 'shield-check', 'description' => 'Administrationsbereich verwalten', 'buttonText' => 'Admin öffnen', 'permission' => 'manage-app-bitwarden'],
         ['label' => 'Gruppen', 'href' => route('apps.bitwarden.admin.groups.index'), 'icon' => 'user-group', 'description' => 'Gruppen verwalten', 'buttonText' => 'Gruppen öffnen', 'permission' => 'manage-app-bitwarden'],
         ['label' => 'Mitglieder', 'href' => route('apps.bitwarden.admin.members.index'), 'icon' => 'users', 'description' => 'Mitglieder verwalten', 'buttonText' => 'Mitglieder öffnen', 'permission' => 'manage-app-bitwarden'],

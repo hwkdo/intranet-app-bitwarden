@@ -49,3 +49,9 @@ Route::middleware(['web','auth','can:manage-app-bitwarden'])->group(function () 
     // GVP-Routes
     Volt::route('apps/bitwarden/admin/gvp', 'apps.bitwarden.admin.gvp.index')->name('apps.bitwarden.admin.gvp.index');
 });
+
+Route::middleware(['web', 'auth', 'can:manage-app-bitwarden'])->group(function (): void {
+    Volt::route('apps/bitwarden/admin/background-activities', 'apps.bitwarden.admin.background-activities')
+        ->name('apps.bitwarden.admin.background-activities');
+});
+

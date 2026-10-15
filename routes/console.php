@@ -1,13 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Schedule;
+declare(strict_types=1);
 
-if (! app()->runningUnitTests()) {
-    Schedule::command('intranet-app-bitwarden:sync-gvp-memberships')
-        ->everyFifteenMinutes()
-        ->withoutOverlapping();
-
-    Schedule::command('intranet-app-bitwarden:confirm-pending-members')
-        ->everyFifteenMinutes()
-        ->withoutOverlapping();
-}
+// Schedules werden über ProvidesBackgroundActivitiesInterface registriert.
