@@ -5,9 +5,17 @@ use Hwkdo\IntranetAppBitwarden\Jobs\RunBitwardenFullResetJob;
 use Hwkdo\IntranetAppBitwarden\Services\BitwardenFullResetService;
 use Hwkdo\IntranetAppBitwarden\Support\BitwardenSyncGuard;
 
-use function Livewire\Volt\{state, title, computed};
+use function Livewire\Volt\{computed, mount, state, title};
 
 title('Bitwarden - Admin');
+
+mount(function (): void {
+    $tab = request()->query('tab');
+
+    if ($tab === 'hintergrund') {
+        $this->activeTab = 'hintergrund';
+    }
+});
 
 state([
     'activeTab' => 'einstellungen',
@@ -113,11 +121,12 @@ $queueFullReset = function () {
     </div>
 
     <flux:tab.group class="mt-6">
-        <flux:tabs wire:model="activeTab">
+        <flux:tabs wire:model.live="activeTab">
             <flux:tab name="hintergrundbild" icon="photo">Hintergrundbild</flux:tab>
             <flux:tab name="einstellungen" icon="cog-6-tooth">Einstellungen</flux:tab>
             <flux:tab name="wartung" icon="exclamation-triangle">Wartung</flux:tab>
             <flux:tab name="statistiken" icon="chart-bar">Statistiken</flux:tab>
+            <flux:tab name="hintergrund" icon="clock">Hintergrund</flux:tab>
         </flux:tabs>
 
         <flux:tab.panel name="hintergrundbild">
@@ -252,6 +261,13 @@ $queueFullReset = function () {
                 </flux:card>
             </div>
         </flux:tab.panel>
+    <flux:tab.panel name="hintergrund">
+        @if ($activeTab === 'hintergrund')
+            <div class="min-h-[400px]">
+                @livewire('intranet-app-base::background-activities', ['appIdentifier' => 'bitwarden'], key('bitwarden-admin-hintergrund'))
+            </div>
+        @endif
+    </flux:tab.panel>
     </flux:tab.group>
 </x-intranet-app-bitwarden::bitwarden-layout>
 </div>
