@@ -122,6 +122,19 @@ $confirmMember = function (string $memberId) {
     }
 };
 
+$reinviteMember = function (string $memberId) {
+    $this->loading = true;
+    try {
+        $this->apiService()->reinviteMember($memberId);
+        Flux::toast('Einladung erneut gesendet', variant: 'success');
+        $this->loadMembers();
+    } catch (\Exception $e) {
+        Flux::toast('Fehler beim erneuten Senden der Einladung: '.$e->getMessage(), variant: 'danger');
+    } finally {
+        $this->loading = false;
+    }
+};
+
 $memberDisplayName = function (array $member): string {
     $name = trim((string) ($member['name'] ?? ''));
 
@@ -401,6 +414,17 @@ mount(function () {
                                             size="sm"
                                         >
                                             Bestätigen
+                                        </flux:button>
+                                    @endif
+                                    @if($status === OrganizationMemberStatus::INVITED)
+                                        <flux:button
+                                            wire:click="reinviteMember('{{ $memberId }}')"
+                                            wire:confirm="Einladung wirklich erneut senden?"
+                                            variant="ghost"
+                                            icon="paper-airplane"
+                                            size="sm"
+                                        >
+                                            Erneut senden
                                         </flux:button>
                                     @endif
                                     <flux:button

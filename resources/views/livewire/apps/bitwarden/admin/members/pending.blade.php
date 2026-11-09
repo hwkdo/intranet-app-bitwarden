@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Flux\Flux;
+use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
 use Hwkdo\BitwardenLaravel\Support\OrganizationMemberStatus;
 use Hwkdo\IntranetAppBitwarden\Services\ConfirmPendingMembersService;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -156,6 +157,20 @@ $confirmMember = function (string $memberId): void {
     }
 };
 
+$reinviteMember = function (string $memberId): void {
+    $this->loading = true;
+
+    try {
+        app(BitwardenManagementApiInterface::class)->reinviteMember($memberId);
+        Flux::toast('Einladung erneut gesendet', variant: 'success');
+        $this->loadPending();
+    } catch (\Throwable $e) {
+        Flux::toast('Fehler beim erneuten Senden der Einladung: '.$e->getMessage(), variant: 'danger');
+    } finally {
+        $this->loading = false;
+    }
+};
+
 $confirmAllReady = function (): void {
     $this->loading = true;
 
@@ -252,16 +267,30 @@ mount(function (): void {
                                 @endif
                             </flux:table.cell>
                             <flux:table.cell>
-                                @if($this->memberCanConfirm($member))
-                                    <flux:button
-                                        size="sm"
-                                        variant="primary"
-                                        wire:click="confirmMember('{{ $member['id'] }}')"
-                                        :disabled="$loading"
-                                    >
-                                        Bestätigen
-                                    </flux:button>
-                                @endif
+                                <div class="flex items-center justify-end gap-2">
+                                    @if(OrganizationMemberStatus::canReinvite($member))
+                                        <flux:button
+                                            size="sm"
+                                            variant="ghost"
+                                            icon="paper-airplane"
+                                            wire:click="reinviteMember('{{ $member['id'] }}')"
+                                            wire:confirm="Einladung wirklich erneut senden?"
+                                            :disabled="$loading"
+                                        >
+                                            Erneut senden
+                                        </flux:button>
+                                    @endif
+                                    @if($this->memberCanConfirm($member))
+                                        <flux:button
+                                            size="sm"
+                                            variant="primary"
+                                            wire:click="confirmMember('{{ $member['id'] }}')"
+                                            :disabled="$loading"
+                                        >
+                                            Bestätigen
+                                        </flux:button>
+                                    @endif
+                                </div>
                             </flux:table.cell>
                         </flux:table.row>
                     @endforeach
