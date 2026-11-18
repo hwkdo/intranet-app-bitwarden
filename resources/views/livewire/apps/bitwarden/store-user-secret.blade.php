@@ -67,8 +67,8 @@ new class extends Component
             </flux:button>
         </div>
     @elseif($this->status === 'ineligible')
-        <flux:text class="mt-2 text-sm text-zinc-500">
-            Speichern in Bitwarden ist verfügbar, sobald dein Konto in der Organisation bestätigt ist.
-        </flux:text>
+        <p class="mt-2 text-sm text-slate-600 dark:text-white/70">
+            Speichern in Bitwarden ist verfügbar, sobald Ihr Konto in der Organisation bestätigt ist.
+        </p>
     @endif
 </div>

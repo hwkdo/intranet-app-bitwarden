@@ -81,193 +81,144 @@ $queueFullReset = function () {
 
 ?>
 <div>
-<x-intranet-app-bitwarden::bitwarden-layout heading="Bitwarden App" subheading="Admin">
-    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <flux:card href="{{ route('apps.bitwarden.admin.groups.index') }}" class="glass-card cursor-pointer hover:shadow-lg transition-shadow">
-            <div class="flex items-center gap-4">
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
-                    <flux:icon icon="user-group" class="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                    <flux:heading size="md">Gruppen</flux:heading>
-                    <flux:text class="text-gray-600 dark:text-gray-400">Gruppen verwalten</flux:text>
-                </div>
-            </div>
-        </flux:card>
-
-        <flux:card href="{{ route('apps.bitwarden.admin.members.index') }}" class="glass-card cursor-pointer hover:shadow-lg transition-shadow">
-            <div class="flex items-center gap-4">
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900">
-                    <flux:icon icon="users" class="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                    <flux:heading size="md">Mitglieder</flux:heading>
-                    <flux:text class="text-gray-600 dark:text-gray-400">Mitglieder verwalten</flux:text>
-                </div>
-            </div>
-        </flux:card>
-
-        <flux:card href="{{ route('apps.bitwarden.admin.members.pending') }}" class="glass-card cursor-pointer hover:shadow-lg transition-shadow">
-            <div class="flex items-center gap-4">
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900">
-                    <flux:icon icon="clock" class="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div>
-                    <flux:heading size="md">Unbestätigt</flux:heading>
-                    <flux:text class="text-gray-600 dark:text-gray-400">Confirm ausstehend</flux:text>
-                </div>
-            </div>
-        </flux:card>
+<x-intranet-app-bitwarden::bitwarden-layout heading="Administration" subheading="Einstellungen, Wartung und Hintergrund der Bitwarden-App." icon="shield-check">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        @foreach ([
+            ['route' => 'apps.bitwarden.admin.groups.index', 'icon' => 'user-group', 'label' => 'Gruppen', 'text' => 'Gruppen verwalten'],
+            ['route' => 'apps.bitwarden.admin.members.index', 'icon' => 'users', 'label' => 'Mitglieder', 'text' => 'Mitglieder verwalten'],
+            ['route' => 'apps.bitwarden.admin.members.pending', 'icon' => 'clock', 'label' => 'Unbestätigt', 'text' => 'Confirm ausstehend'],
+        ] as $link)
+            <a href="{{ route($link['route']) }}" wire:navigate wire:key="admin-link-{{ $link['route'] }}" class="glass-card flex items-center gap-3 p-4 transition hover:ring-1 hover:ring-[#073070]/30">
+                <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-[#073070]/10 text-[#073070] dark:bg-white/10 dark:text-white">
+                    <flux:icon :icon="$link['icon']" variant="micro" class="size-5" />
+                </span>
+                <span class="min-w-0">
+                    <span class="block text-sm font-semibold text-[#073070] dark:text-white">{{ $link['label'] }}</span>
+                    <span class="block text-xs text-slate-600 dark:text-white/70">{{ $link['text'] }}</span>
+                </span>
+            </a>
+        @endforeach
     </div>
 
-    <flux:tab.group class="mt-6">
-        <flux:tabs wire:model.live="activeTab">
-            <flux:tab name="hintergrundbild" icon="photo">Hintergrundbild</flux:tab>
-            <flux:tab name="einstellungen" icon="cog-6-tooth">Einstellungen</flux:tab>
-            <flux:tab name="wartung" icon="exclamation-triangle">Wartung</flux:tab>
-            <flux:tab name="statistiken" icon="chart-bar">Statistiken</flux:tab>
-            <flux:tab name="hintergrund" icon="clock">Hintergrund</flux:tab>
-        </flux:tabs>
+    @php
+        $adminTabs = [
+            ['name' => 'hintergrundbild', 'icon' => 'photo', 'label' => 'Hintergrundbild'],
+            ['name' => 'einstellungen', 'icon' => 'cog-6-tooth', 'label' => 'Einstellungen'],
+            ['name' => 'wartung', 'icon' => 'exclamation-triangle', 'label' => 'Wartung'],
+            ['name' => 'statistiken', 'icon' => 'chart-bar', 'label' => 'Statistiken'],
+            ['name' => 'hintergrund', 'icon' => 'clock', 'label' => 'Hintergrund'],
+        ];
+    @endphp
 
-        <flux:tab.panel name="hintergrundbild">
-            <div style="min-height: 400px;">
-                @livewire('intranet-app-base::app-background-image', [
-                    'appIdentifier' => 'bitwarden',
-                ])
-            </div>
-        </flux:tab.panel>
+    <div class="glass-card sticky top-3 z-20 p-3" style="--glass-opacity: 0.92">
+        <div class="flex flex-wrap gap-1.5" role="tablist" aria-label="Administrationsbereiche">
+            @foreach ($adminTabs as $tab)
+                <x-intranet-app-bitwarden::pill
+                    wire:key="admin-tab-{{ $tab['name'] }}"
+                    :icon="$tab['icon']"
+                    :active="$activeTab === $tab['name']"
+                    wire:click="$set('activeTab', '{{ $tab['name'] }}')"
+                    role="tab"
+                    :aria-selected="$activeTab === $tab['name'] ? 'true' : 'false'"
+                >{{ $tab['label'] }}</x-intranet-app-bitwarden::pill>
+            @endforeach
+        </div>
+    </div>
 
-        <flux:tab.panel name="einstellungen">
-            <div style="min-height: 400px;">
-                @livewire('intranet-app-base::admin-settings', [
-                    'appIdentifier' => 'bitwarden',
-                    'settingsModelClass' => '\Hwkdo\IntranetAppBitwarden\Models\IntranetAppBitwardenSettings',
-                    'appSettingsClass' => '\Hwkdo\IntranetAppBitwarden\Data\AppSettings'
-                ])
-            </div>
-        </flux:tab.panel>
+    @if ($activeTab === 'hintergrundbild')
+        <div class="glass-card min-h-[400px] overflow-hidden p-5">
+            @livewire('intranet-app-base::app-background-image', ['appIdentifier' => 'bitwarden'], key('bitwarden-admin-background'))
+        </div>
+    @elseif ($activeTab === 'einstellungen')
+        <div class="min-h-[400px]">
+            @livewire('intranet-app-base::admin-settings', [
+                'appIdentifier' => 'bitwarden',
+                'settingsModelClass' => '\Hwkdo\IntranetAppBitwarden\Models\IntranetAppBitwardenSettings',
+                'appSettingsClass' => '\Hwkdo\IntranetAppBitwarden\Data\AppSettings',
+            ], key('bitwarden-admin-settings'))
+        </div>
+    @elseif ($activeTab === 'wartung')
+        <div class="space-y-4">
+            <x-intranet-app-bitwarden::note icon="exclamation-triangle" title="Full Reset">
+                Löscht alle Collections und Gruppen in Bitwarden, entfernt alle Org-Mitglieder
+                außer dem Keep-Konto und leert die Bitwarden-IDs auf allen GVPs.
+                Der Lauf erfolgt asynchron in der Queue (Rate-Limit ~400&nbsp;ms zwischen API-Calls).
+            </x-intranet-app-bitwarden::note>
 
-        <flux:tab.panel name="wartung">
-            <div class="space-y-6" style="min-height: 400px;">
-                <flux:callout variant="danger" icon="exclamation-triangle">
-                    <flux:callout.heading>Full Reset</flux:callout.heading>
-                    <flux:callout.text>
-                        Löscht alle Collections und Gruppen in Bitwarden, entfernt alle Org-Mitglieder
-                        außer dem Keep-Konto und leert die Bitwarden-IDs auf allen GVPs.
-                        Der Lauf erfolgt asynchron in der Queue (Rate-Limit ~400&nbsp;ms zwischen API-Calls).
-                    </flux:callout.text>
-                </flux:callout>
+            @if ($this->resetInProgress)
+                <x-intranet-app-bitwarden::note icon="arrow-path" title="Full Reset läuft">
+                    Ein Full Reset scheint aktiv oder kürzlich gestartet. Bitte prüfen Sie Logs und Horizon.
+                </x-intranet-app-bitwarden::note>
+            @endif
 
-                @if($this->resetInProgress)
-                    <flux:callout variant="warning" icon="arrow-path">
-                        Ein Full Reset scheint aktiv oder kürzlich gestartet — bitte Logs/Horizon prüfen.
-                    </flux:callout>
-                @endif
+            <x-intranet-app-bitwarden::section icon="exclamation-triangle" title="Full Reset starten" description="Diese Aktion kann nicht rückgängig gemacht werden.">
+                <div class="divide-y divide-[#d0e3f9] px-5 dark:divide-white/10">
+                    <x-intranet-app-bitwarden::row label="Keep-Konto" description="Standard: do.it@hwk-do.de. Dieses Konto bleibt erhalten." wide>
+                        <flux:input wire:model="resetKeepEmail" type="email" />
+                    </x-intranet-app-bitwarden::row>
+                    <x-intranet-app-bitwarden::row label="Konten löschen" description="Vaultwarden-Konten ebenfalls löschen, nicht nur die Org-Mitgliedschaft.">
+                        <flux:checkbox wire:model="resetDeleteAccounts" label="Konten löschen" />
+                    </x-intranet-app-bitwarden::row>
+                    <x-intranet-app-bitwarden::row label="Bestätigung" description="Tippen Sie exakt FULL RESET." wide>
+                        <flux:input wire:model.live="resetConfirmPhrase" placeholder="FULL RESET" autocomplete="off" />
+                    </x-intranet-app-bitwarden::row>
+                </div>
+                <div class="flex justify-end border-t border-[#d0e3f9] px-5 py-4 dark:border-white/10">
+                    <flux:button
+                        variant="danger"
+                        icon="trash"
+                        wire:click="queueFullReset"
+                        wire:confirm="Wirklich Full Reset in die Queue stellen? Das kann nicht rückgängig gemacht werden."
+                        :disabled="! $this->canSubmitReset"
+                        wire:loading.attr="disabled"
+                    >
+                        Full Reset in Queue stellen
+                    </flux:button>
+                </div>
+            </x-intranet-app-bitwarden::section>
 
-                <flux:card class="glass-card border border-red-300 dark:border-red-800">
-                    <flux:heading size="lg" class="mb-4">Full Reset starten</flux:heading>
-
-                    <div class="space-y-4 max-w-xl">
-                        <flux:field>
-                            <flux:label>Keep-Konto (bleibt erhalten)</flux:label>
-                            <flux:input wire:model="resetKeepEmail" type="email" />
-                            <flux:description>Standard: do.it@hwk-do.de</flux:description>
-                        </flux:field>
-
-                        <flux:field>
-                            <flux:checkbox wire:model="resetDeleteAccounts" label="Vaultwarden-Konten ebenfalls löschen (nicht nur Org-Mitgliedschaft)" />
-                        </flux:field>
-
-                        <flux:field>
-                            <flux:label>Bestätigung</flux:label>
-                            <flux:input
-                                wire:model.live="resetConfirmPhrase"
-                                placeholder="FULL RESET"
-                                autocomplete="off"
-                            />
-                            <flux:description>
-                                Tippen Sie exakt <code>FULL RESET</code>
-                            </flux:description>
-                        </flux:field>
-
-                        <flux:button
-                            variant="danger"
-                            icon="trash"
-                            wire:click="queueFullReset"
-                            wire:confirm="Wirklich Full Reset in die Queue stellen? Das kann nicht rückgängig gemacht werden."
-                            :disabled="! $this->canSubmitReset"
-                            wire:loading.attr="disabled"
-                        >
-                            Full Reset in Queue stellen
-                        </flux:button>
+            @if ($this->lastResetResult)
+                @php($last = $this->lastResetResult)
+                <x-intranet-app-bitwarden::section icon="clipboard-document-list" title="Letztes Ergebnis" description="{{ ($last['finished_at'] ?? '—') }}{{ ! empty($last['dry_run']) ? ' · Dry-Run' : '' }} · Keep: {{ $last['keep_email'] ?? '—' }}">
+                    <div class="divide-y divide-[#d0e3f9] px-5 dark:divide-white/10">
+                        <x-intranet-app-bitwarden::row label="GVPs geleert">{{ $last['cleared_gvps'] ?? 0 }}</x-intranet-app-bitwarden::row>
+                        <x-intranet-app-bitwarden::row label="Collections gelöscht">{{ $last['deleted_collections'] ?? 0 }}</x-intranet-app-bitwarden::row>
+                        <x-intranet-app-bitwarden::row label="Gruppen gelöscht">{{ $last['deleted_groups'] ?? 0 }}</x-intranet-app-bitwarden::row>
+                        <x-intranet-app-bitwarden::row label="Org-Mitglieder entfernt">{{ $last['removed_org_members'] ?? 0 }}</x-intranet-app-bitwarden::row>
+                        <x-intranet-app-bitwarden::row label="Konten gelöscht">{{ $last['deleted_user_accounts'] ?? 0 }}</x-intranet-app-bitwarden::row>
+                        <x-intranet-app-bitwarden::row label="Fehler">{{ $last['failed'] ?? 0 }}</x-intranet-app-bitwarden::row>
                     </div>
-                </flux:card>
-
-                @if($this->lastResetResult)
-                    @php($last = $this->lastResetResult)
-                    <flux:card class="glass-card">
-                        <flux:heading size="md" class="mb-3">Letztes Ergebnis</flux:heading>
-                        <flux:text variant="muted" size="sm" class="mb-3">
-                            {{ $last['finished_at'] ?? '—' }}
-                            @if(! empty($last['dry_run']))
-                                · Dry-Run
-                            @endif
-                            · Keep: {{ $last['keep_email'] ?? '—' }}
-                        </flux:text>
-                        <ul class="space-y-1 text-sm">
-                            <li>GVPs geleert: {{ $last['cleared_gvps'] ?? 0 }}</li>
-                            <li>Collections gelöscht: {{ $last['deleted_collections'] ?? 0 }}</li>
-                            <li>Gruppen gelöscht: {{ $last['deleted_groups'] ?? 0 }}</li>
-                            <li>Org-Mitglieder entfernt: {{ $last['removed_org_members'] ?? 0 }}</li>
-                            <li>Konten gelöscht: {{ $last['deleted_user_accounts'] ?? 0 }}</li>
-                            <li>Fehler: {{ $last['failed'] ?? 0 }}</li>
-                        </ul>
-                        @if(! empty($last['errors']))
-                            <div class="mt-4 space-y-1">
-                                @foreach(array_slice($last['errors'], 0, 10) as $error)
-                                    <flux:text class="text-red-600 text-sm">{{ $error }}</flux:text>
-                                @endforeach
-                            </div>
-                        @endif
-                    </flux:card>
-                @endif
-            </div>
-        </flux:tab.panel>
-
-        <flux:tab.panel name="statistiken">
-            <div style="min-height: 400px;">
-                <flux:card class="glass-card">
-                    <flux:heading size="lg" class="mb-4">App-Statistiken</flux:heading>
-                    <flux:text class="mb-6">
-                        Übersicht über die Nutzung der Bitwarden App.
-                    </flux:text>
-                    
-                    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        <div class="rounded-lg border p-4">
-                            <flux:heading size="md">Aktive Benutzer</flux:heading>
-                            <flux:text size="xl" class="mt-2">42</flux:text>
+                    @if (! empty($last['errors']))
+                        <div class="space-y-1 border-t border-[#d0e3f9] px-5 py-4 text-sm text-red-700 dark:border-white/10 dark:text-red-300">
+                            @foreach (array_slice($last['errors'], 0, 10) as $error)
+                                <p wire:key="reset-error-{{ $loop->index }}">{{ $error }}</p>
+                            @endforeach
                         </div>
-                        
-                        <div class="rounded-lg border p-4">
-                            <flux:heading size="md">Seitenaufrufe</flux:heading>
-                            <flux:text size="xl" class="mt-2">1,234</flux:text>
-                        </div>
-                        
-                        <div class="rounded-lg border p-4">
-                            <flux:heading size="md">Letzte Aktivität</flux:heading>
-                            <flux:text size="xl" class="mt-2">2 Min</flux:text>
-                        </div>
-                    </div>
-                </flux:card>
+                    @endif
+                </x-intranet-app-bitwarden::section>
+            @endif
+        </div>
+    @elseif ($activeTab === 'statistiken')
+        <x-intranet-app-bitwarden::section icon="chart-bar" title="App-Statistiken" description="Übersicht über die Nutzung der Bitwarden App.">
+            <div class="grid gap-3 p-5 sm:grid-cols-3">
+                <div class="rounded-xl bg-white/70 px-4 py-3 ring-1 ring-[#d0e3f9] dark:bg-white/5 dark:ring-white/10">
+                    <p class="text-xs text-slate-600 dark:text-white/70">Aktive Benutzer</p>
+                    <p class="mt-1 text-2xl font-semibold text-[#073070] dark:text-white">42</p>
+                </div>
+                <div class="rounded-xl bg-white/70 px-4 py-3 ring-1 ring-[#d0e3f9] dark:bg-white/5 dark:ring-white/10">
+                    <p class="text-xs text-slate-600 dark:text-white/70">Seitenaufrufe</p>
+                    <p class="mt-1 text-2xl font-semibold text-[#073070] dark:text-white">1,234</p>
+                </div>
+                <div class="rounded-xl bg-white/70 px-4 py-3 ring-1 ring-[#d0e3f9] dark:bg-white/5 dark:ring-white/10">
+                    <p class="text-xs text-slate-600 dark:text-white/70">Letzte Aktivität</p>
+                    <p class="mt-1 text-2xl font-semibold text-[#073070] dark:text-white">2 Min</p>
+                </div>
             </div>
-        </flux:tab.panel>
-    <flux:tab.panel name="hintergrund">
-        @if ($activeTab === 'hintergrund')
-            <div class="min-h-[400px]">
-                @livewire('intranet-app-base::background-activities', ['appIdentifier' => 'bitwarden'], key('bitwarden-admin-hintergrund'))
-            </div>
-        @endif
-    </flux:tab.panel>
-    </flux:tab.group>
+        </x-intranet-app-bitwarden::section>
+    @elseif ($activeTab === 'hintergrund')
+        <div class="glass-card min-h-[400px] overflow-hidden p-5">
+            @livewire('intranet-app-base::background-activities', ['appIdentifier' => 'bitwarden'], key('bitwarden-admin-hintergrund'))
+        </div>
+    @endif
 </x-intranet-app-bitwarden::bitwarden-layout>
 </div>

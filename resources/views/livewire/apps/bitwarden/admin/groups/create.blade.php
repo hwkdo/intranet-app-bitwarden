@@ -46,30 +46,29 @@ $save = function () {
 
 ?>
 <div>
-<x-intranet-app-bitwarden::bitwarden-layout heading="Neue Gruppe erstellen" subheading="Bitwarden Gruppen">
-    <flux:card class="glass-card">
-        <form wire:submit="save" class="space-y-6">
-            <flux:field>
-                <flux:label>Name</flux:label>
-                <flux:input wire:model="name" placeholder="Gruppenname" required />
-                <flux:error name="name" />
-            </flux:field>
-
-            <flux:field>
-                <flux:checkbox wire:model="accessAll" label="Zugriff auf alle Collections" />
-                <flux:error name="accessAll" />
-            </flux:field>
-
-            <div class="flex items-center justify-end gap-3 mt-6">
+<x-intranet-app-bitwarden::bitwarden-layout heading="Neue Gruppe" subheading="Legen Sie eine Bitwarden-Gruppe an." icon="user-group">
+    <x-intranet-app-bitwarden::section icon="user-group" title="Gruppe" description="Name und Zugriff der neuen Gruppe.">
+        <form wire:submit="save">
+            <div class="divide-y divide-[#d0e3f9] px-5 dark:divide-white/10">
+                <x-intranet-app-bitwarden::row label="Name" description="Anzeigename der Gruppe in Bitwarden." wide>
+                    <flux:input wire:model="name" placeholder="Gruppenname" required />
+                    <flux:error name="name" />
+                </x-intranet-app-bitwarden::row>
+                <x-intranet-app-bitwarden::row label="Zugriff" description="Zugriff auf alle Collections.">
+                    <flux:checkbox wire:model="accessAll" label="Alle Collections" />
+                    <flux:error name="accessAll" />
+                </x-intranet-app-bitwarden::row>
+            </div>
+            <div class="flex items-center justify-end gap-3 border-t border-[#d0e3f9] px-5 py-4 dark:border-white/10">
                 <flux:button href="{{ route('apps.bitwarden.admin.groups.index') }}" variant="ghost">
                     Abbrechen
                 </flux:button>
                 <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
                     <span wire:loading.remove>Gruppe erstellen</span>
-                    <span wire:loading>Wird erstellt...</span>
+                    <span wire:loading>Wird erstellt …</span>
                 </flux:button>
             </div>
         </form>
-    </flux:card>
+    </x-intranet-app-bitwarden::section>
 </x-intranet-app-bitwarden::bitwarden-layout>
 </div>

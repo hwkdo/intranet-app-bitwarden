@@ -240,9 +240,9 @@ $restoreAccess = function (int $gvpId, int $userId) {
 
 ?>
 <div>
-<x-intranet-app-bitwarden::bitwarden-layout heading="Meine Sammlungen" subheading="Gruppen und Collections Ihrer GVPs">
+<x-intranet-app-bitwarden::bitwarden-layout heading="Meine Sammlungen" subheading="Gruppen und Collections Ihrer GVPs." icon="folder">
     @if($this->canCreateCustomCollections)
-        <div class="mb-6 flex justify-end">
+        <div class="glass-card sticky top-3 z-20 flex justify-end p-3" style="--glass-opacity: 0.92">
             <flux:button variant="primary" icon="plus" wire:click="openCreateModal" wire:loading.attr="disabled">
                 Sammlung anlegen
             </flux:button>
@@ -250,9 +250,9 @@ $restoreAccess = function (int $gvpId, int $userId) {
     @endif
 
     @if($this->visibleCards->isEmpty())
-        <flux:callout variant="info" icon="information-circle">
+        <x-intranet-app-bitwarden::empty icon="folder" title="Keine Sammlungen">
             Keine Bitwarden-Gruppen oder Collections für Sie gefunden.
-        </flux:callout>
+        </x-intranet-app-bitwarden::empty>
     @else
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
             @foreach($this->visibleCards as $card)
@@ -263,15 +263,20 @@ $restoreAccess = function (int $gvpId, int $userId) {
                         $customMembers = $custom ? $this->customMembersFor($custom) : collect();
                         $memberUserIds = $customMembers->pluck('id')->all();
                     @endphp
-                    <flux:card class="glass-card" wire:key="meine-card-{{ $card->key() }}">
-                        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                            <div>
-                                <flux:heading size="lg">{{ $card->title() }}</flux:heading>
-                                <div class="mt-2 flex flex-wrap gap-2">
-                                    <flux:badge color="sky">Manuell</flux:badge>
-                                    @if($isCreator)
-                                        <flux:badge variant="success">Ersteller</flux:badge>
-                                    @endif
+                    <section class="glass-card overflow-hidden" wire:key="meine-card-{{ $card->key() }}">
+                        <div class="flex flex-col gap-4 border-b border-[#d0e3f9] px-5 py-4 sm:flex-row sm:items-start sm:justify-between dark:border-white/10">
+                            <div class="flex min-w-0 items-start gap-3">
+                                <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-[#073070]/10 text-[#073070] dark:bg-white/10 dark:text-white">
+                                    <flux:icon icon="folder" variant="micro" class="size-5" />
+                                </span>
+                                <div class="min-w-0">
+                                    <h2 class="text-sm font-semibold text-[#073070] dark:text-white">{{ $card->title() }}</h2>
+                                    <div class="mt-2 flex flex-wrap gap-2">
+                                        <span class="inline-flex items-center rounded-full bg-[#073070]/10 px-2.5 py-0.5 text-xs font-semibold text-[#073070] dark:bg-white/10 dark:text-white">Manuell</span>
+                                        @if($isCreator)
+                                            <flux:badge variant="success">Ersteller</flux:badge>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                             @if($isCreator)
@@ -287,22 +292,23 @@ $restoreAccess = function (int $gvpId, int $userId) {
                             @endif
                         </div>
 
-                        <flux:accordion transition class="mt-6">
+                        <div class="px-5 pb-4">
+                        <flux:accordion transition>
                             <flux:accordion.item>
                                 <flux:accordion.heading>
                                     Berechtigte
-                                    <flux:text variant="muted" class="ml-1 font-normal">({{ $customMembers->count() }})</flux:text>
+                                    <span class="ml-1 font-normal text-slate-600 dark:text-white/70">({{ $customMembers->count() }})</span>
                                 </flux:accordion.heading>
                                 <flux:accordion.content>
                                     @if($customMembers->isEmpty())
-                                        <flux:text variant="muted">Keine berechtigten Mitglieder.</flux:text>
+                                        <p class="py-4 text-sm text-slate-600 dark:text-white/70">Keine berechtigten Mitglieder.</p>
                                     @else
-                                        <ul class="divide-y divide-zinc-200 dark:divide-zinc-700 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                                        <ul class="divide-y divide-[#d0e3f9] dark:divide-white/10">
                                             @foreach($customMembers as $member)
-                                                <li class="flex items-center justify-between gap-3 px-3 py-2" wire:key="custom-member-{{ $custom->id }}-{{ $member->id }}">
+                                                <li class="flex items-center justify-between gap-3 py-3" wire:key="custom-member-{{ $custom->id }}-{{ $member->id }}">
                                                     <div>
-                                                        <flux:text class="font-medium">{{ $member->name }}</flux:text>
-                                                        <flux:text variant="muted" size="sm">{{ $member->email }}</flux:text>
+                                                        <p class="text-sm font-medium text-[#073070] dark:text-white">{{ $member->name }}</p>
+                                                        <p class="text-sm text-slate-600 dark:text-white/70">{{ $member->email }}</p>
                                                     </div>
                                                     @if($isCreator && (int) $member->id !== (int) auth()->id())
                                                         <flux:button
@@ -350,7 +356,8 @@ $restoreAccess = function (int $gvpId, int $userId) {
                                 </flux:accordion.content>
                             </flux:accordion.item>
                         </flux:accordion>
-                    </flux:card>
+                        </div>
+                    </section>
                 @else
                     @php
                         $gvp = $card->gvp;
@@ -360,30 +367,35 @@ $restoreAccess = function (int $gvpId, int $userId) {
                         $members = $this->membersFor($gvp, $isGesamt);
                         $excluded = $canManageGvp ? $this->excludedFor($gvp) : collect();
                     @endphp
-                    <flux:card class="glass-card" wire:key="meine-card-{{ $card->key() }}">
-                        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                            <div>
-                                <flux:heading size="lg">{{ $card->title() }}</flux:heading>
-                                @if($isGesamt)
-                                    <flux:text variant="muted" size="sm" class="mt-1">
-                                        Gesamt-Collection der Abteilung (inkl. untergeordneter Gruppen)
-                                    </flux:text>
-                                @endif
-                                <div class="mt-2 flex flex-wrap gap-2">
+                    <section class="glass-card overflow-hidden" wire:key="meine-card-{{ $card->key() }}">
+                        <div class="flex flex-col gap-4 border-b border-[#d0e3f9] px-5 py-4 sm:flex-row sm:items-start sm:justify-between dark:border-white/10">
+                            <div class="flex min-w-0 items-start gap-3">
+                                <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-[#073070]/10 text-[#073070] dark:bg-white/10 dark:text-white">
+                                    <flux:icon icon="folder" variant="micro" class="size-5" />
+                                </span>
+                                <div class="min-w-0">
+                                    <h2 class="text-sm font-semibold text-[#073070] dark:text-white">{{ $card->title() }}</h2>
                                     @if($isGesamt)
-                                        <flux:badge variant="success">Gesamt-Collection</flux:badge>
-                                    @else
-                                        @if($gvp->hasBitwardenGroup())
-                                            <flux:badge variant="success">Gruppe</flux:badge>
-                                        @else
-                                            <flux:badge color="zinc">Keine Gruppe</flux:badge>
-                                        @endif
-                                        @if($gvp->hasBitwardenCollection())
-                                            <flux:badge variant="success">Collection</flux:badge>
-                                        @else
-                                            <flux:badge color="zinc">Keine Collection</flux:badge>
-                                        @endif
+                                        <p class="mt-1 text-xs text-slate-600 dark:text-white/70">
+                                            Gesamt-Collection der Abteilung (inkl. untergeordneter Gruppen)
+                                        </p>
                                     @endif
+                                    <div class="mt-2 flex flex-wrap gap-2">
+                                        @if($isGesamt)
+                                            <flux:badge variant="success">Gesamt-Collection</flux:badge>
+                                        @else
+                                            @if($gvp->hasBitwardenGroup())
+                                                <flux:badge variant="success">Gruppe</flux:badge>
+                                            @else
+                                                <flux:badge variant="neutral">Keine Gruppe</flux:badge>
+                                            @endif
+                                            @if($gvp->hasBitwardenCollection())
+                                                <flux:badge variant="success">Collection</flux:badge>
+                                            @else
+                                                <flux:badge variant="neutral">Keine Collection</flux:badge>
+                                            @endif
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
 
@@ -405,22 +417,23 @@ $restoreAccess = function (int $gvpId, int $userId) {
                             @endif
                         </div>
 
-                        <flux:accordion transition class="mt-6">
+                        <div class="px-5 pb-4">
+                        <flux:accordion transition>
                             <flux:accordion.item>
                                 <flux:accordion.heading>
                                     Berechtigte
-                                    <flux:text variant="muted" class="ml-1 font-normal">({{ $members->count() }})</flux:text>
+                                    <span class="ml-1 font-normal text-slate-600 dark:text-white/70">({{ $members->count() }})</span>
                                 </flux:accordion.heading>
                                 <flux:accordion.content>
                                     @if($members->isEmpty())
-                                        <flux:text variant="muted">Keine berechtigten Mitglieder.</flux:text>
+                                        <p class="py-4 text-sm text-slate-600 dark:text-white/70">Keine berechtigten Mitglieder.</p>
                                     @else
-                                        <ul class="divide-y divide-zinc-200 dark:divide-zinc-700 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                                        <ul class="divide-y divide-[#d0e3f9] dark:divide-white/10">
                                             @foreach($members as $member)
-                                                <li class="flex items-center justify-between gap-3 px-3 py-2" wire:key="member-{{ $card->key() }}-{{ $member->id }}">
+                                                <li class="flex items-center justify-between gap-3 py-3" wire:key="member-{{ $card->key() }}-{{ $member->id }}">
                                                     <div>
-                                                        <flux:text class="font-medium">{{ $member->name }}</flux:text>
-                                                        <flux:text variant="muted" size="sm">{{ $member->email }}</flux:text>
+                                                        <p class="text-sm font-medium text-[#073070] dark:text-white">{{ $member->name }}</p>
+                                                        <p class="text-sm text-slate-600 dark:text-white/70">{{ $member->email }}</p>
                                                     </div>
                                                     @if($canManageGvp && (int) $member->id !== (int) auth()->id())
                                                         <flux:button
@@ -444,15 +457,15 @@ $restoreAccess = function (int $gvpId, int $userId) {
                                 <flux:accordion.item>
                                     <flux:accordion.heading>
                                         Entzogene Zugriffe
-                                        <flux:text variant="muted" class="ml-1 font-normal">({{ $excluded->count() }})</flux:text>
+                                        <span class="ml-1 font-normal text-slate-600 dark:text-white/70">({{ $excluded->count() }})</span>
                                     </flux:accordion.heading>
                                     <flux:accordion.content>
-                                        <ul class="divide-y divide-zinc-200 dark:divide-zinc-700 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                                        <ul class="divide-y divide-[#d0e3f9] dark:divide-white/10">
                                             @foreach($excluded as $member)
-                                                <li class="flex items-center justify-between gap-3 px-3 py-2" wire:key="excluded-{{ $card->key() }}-{{ $member->id }}">
+                                                <li class="flex items-center justify-between gap-3 py-3" wire:key="excluded-{{ $card->key() }}-{{ $member->id }}">
                                                     <div>
-                                                        <flux:text class="font-medium">{{ $member->name }}</flux:text>
-                                                        <flux:text variant="muted" size="sm">{{ $member->email }}</flux:text>
+                                                        <p class="text-sm font-medium text-[#073070] dark:text-white">{{ $member->name }}</p>
+                                                        <p class="text-sm text-slate-600 dark:text-white/70">{{ $member->email }}</p>
                                                     </div>
                                                     <flux:button
                                                         size="sm"
@@ -468,7 +481,8 @@ $restoreAccess = function (int $gvpId, int $userId) {
                                 </flux:accordion.item>
                             @endif
                         </flux:accordion>
-                    </flux:card>
+                        </div>
+                    </section>
                 @endif
             @endforeach
         </div>

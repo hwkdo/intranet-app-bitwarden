@@ -91,61 +91,60 @@ $save = function () {
 
 ?>
 <div>
-<x-intranet-app-bitwarden::bitwarden-layout heading="Mitglied bearbeiten" subheading="Bitwarden Mitglieder">
+<x-intranet-app-bitwarden::bitwarden-layout heading="Mitglied bearbeiten" subheading="Typ, Zugriff und Gruppen des Mitglieds." icon="users">
     @if($loading)
-        <flux:card class="glass-card">
+        <x-intranet-app-bitwarden::section icon="users" title="Mitglied" description="Das Mitglied wird geladen.">
             <div class="flex items-center justify-center py-12">
-                <flux:icon.loading class="h-8 w-8" />
+                <flux:icon.loading class="size-8 text-[#073070] dark:text-white" />
             </div>
-        </flux:card>
+        </x-intranet-app-bitwarden::section>
     @elseif($member)
-        <flux:card class="glass-card">
-            <div class="mb-6">
-                <flux:heading size="lg">{{ trim((string) ($member['name'] ?? '')) !== '' ? $member['name'] : ($member['email'] ?? 'Unbekannt') }}</flux:heading>
-                <flux:text class="text-gray-600">{{ $member['email'] ?? '-' }}</flux:text>
-            </div>
-
-            <form wire:submit="save" class="space-y-6">
-                <flux:field>
-                    <flux:label>Typ</flux:label>
-                    <flux:select wire:model="type" required>
-                        <option value="0">Owner</option>
-                        <option value="1">Admin</option>
-                        <option value="2">User</option>
-                        <option value="3">Manager</option>
-                        <option value="4">Custom</option>
-                    </flux:select>
-                    <flux:error name="type" />
-                </flux:field>
-
-                <flux:field>
-                    <flux:checkbox wire:model="accessAll" label="Zugriff auf alle Collections" />
-                    <flux:error name="accessAll" />
-                </flux:field>
-
-                @if(!empty($availableGroups))
-                    <flux:field>
-                        <flux:label>Gruppen</flux:label>
-                        <flux:select wire:model="groups" multiple>
-                            @foreach($availableGroups as $group)
-                                <option value="{{ $group['id'] }}">{{ $group['name'] ?? 'Unbenannt' }}</option>
-                            @endforeach
+        @php
+            $memberTitle = trim((string) ($member['name'] ?? '')) !== '' ? $member['name'] : ($member['email'] ?? 'Unbekannt');
+        @endphp
+        <x-intranet-app-bitwarden::section icon="users" :title="$memberTitle" :description="$member['email'] ?? '-'">
+            <form wire:submit="save">
+                <div class="divide-y divide-[#d0e3f9] px-5 dark:divide-white/10">
+                    <x-intranet-app-bitwarden::row label="Typ" description="Rolle in der Organisation." wide>
+                        <flux:select wire:model="type" required>
+                            <option value="0">Owner</option>
+                            <option value="1">Admin</option>
+                            <option value="2">User</option>
+                            <option value="3">Manager</option>
+                            <option value="4">Custom</option>
                         </flux:select>
-                        <flux:error name="groups" />
-                    </flux:field>
-                @endif
-
-                <div class="flex items-center justify-end gap-3 mt-6">
+                        <flux:error name="type" />
+                    </x-intranet-app-bitwarden::row>
+                    <x-intranet-app-bitwarden::row label="Zugriff" description="Zugriff auf alle Collections.">
+                        <flux:checkbox wire:model="accessAll" label="Alle Collections" />
+                        <flux:error name="accessAll" />
+                    </x-intranet-app-bitwarden::row>
+                    @if(!empty($availableGroups))
+                        <x-intranet-app-bitwarden::row label="Gruppen" description="Gruppen dieses Mitglieds." wide>
+                            <flux:select wire:model="groups" multiple>
+                                @foreach($availableGroups as $group)
+                                    <option value="{{ $group['id'] }}" wire:key="member-group-{{ $group['id'] }}">{{ $group['name'] ?? 'Unbenannt' }}</option>
+                                @endforeach
+                            </flux:select>
+                            <flux:error name="groups" />
+                        </x-intranet-app-bitwarden::row>
+                    @endif
+                </div>
+                <div class="flex items-center justify-end gap-3 border-t border-[#d0e3f9] px-5 py-4 dark:border-white/10">
                     <flux:button href="{{ route('apps.bitwarden.admin.members.index') }}" variant="ghost">
                         Abbrechen
                     </flux:button>
                     <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
                         <span wire:loading.remove>Änderungen speichern</span>
-                        <span wire:loading>Wird gespeichert...</span>
+                        <span wire:loading>Wird gespeichert …</span>
                     </flux:button>
                 </div>
             </form>
-        </flux:card>
+        </x-intranet-app-bitwarden::section>
+    @else
+        <x-intranet-app-bitwarden::empty icon="users" title="Mitglied nicht gefunden">
+            Das angeforderte Mitglied ist nicht vorhanden.
+        </x-intranet-app-bitwarden::empty>
     @endif
 </x-intranet-app-bitwarden::bitwarden-layout>
 </div>

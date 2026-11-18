@@ -244,28 +244,27 @@ $deleteGroup = function (int $gvpId) {
 
 ?>
 <div>
-<x-intranet-app-bitwarden::bitwarden-layout heading="GVP verwalten" subheading="Bitwarden GVP">
-    <flux:card class="glass-card">
-        <div class="flex items-center justify-between mb-6">
-            <flux:heading size="lg">GVPs</flux:heading>
-        </div>
-
+<x-intranet-app-bitwarden::bitwarden-layout heading="GVP" subheading="Gruppen und Collections der Geschäftsbereiche." icon="building-office">
+    <div class="glass-card sticky top-3 z-20 p-3" style="--glass-opacity: 0.92">
         <flux:input
             wire:model.live.debounce.300ms="search"
-            placeholder="GVPs durchsuchen..."
+            placeholder="GVPs durchsuchen …"
             icon="magnifying-glass"
-            class="mb-6"
+            aria-label="GVPs durchsuchen"
+            clearable
         />
+    </div>
 
-        @if(empty($this->filteredGvps))
-            <flux:callout variant="info" icon="information-circle">
-                @if(empty($this->search))
-                    Keine GVPs gefunden.
-                @else
-                    Keine GVPs gefunden, die "{{ $this->search }}" enthalten.
-                @endif
-            </flux:callout>
-        @else
+    @if(empty($this->filteredGvps))
+        <x-intranet-app-bitwarden::empty icon="building-office" title="Keine GVPs">
+            @if(empty($this->search))
+                Keine GVPs gefunden.
+            @else
+                Keine GVPs gefunden, die „{{ $this->search }}“ enthalten.
+            @endif
+        </x-intranet-app-bitwarden::empty>
+    @else
+        <x-intranet-app-bitwarden::section icon="building-office" title="GVPs" description="{{ count($this->filteredGvps) }} {{ count($this->filteredGvps) === 1 ? 'Eintrag' : 'Einträge' }}">
             <flux:table>
                 <flux:table.columns>
                     <flux:table.column>Bezeichnung</flux:table.column>
@@ -492,7 +491,7 @@ $deleteGroup = function (int $gvpId) {
                     @endforeach
                 </flux:table.rows>
             </flux:table>
-        @endif
-    </flux:card>
+        </x-intranet-app-bitwarden::section>
+    @endif
 </x-intranet-app-bitwarden::bitwarden-layout>
 </div>

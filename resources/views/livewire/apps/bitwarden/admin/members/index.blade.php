@@ -275,59 +275,59 @@ mount(function () {
 
 ?>
 <div>
-<x-intranet-app-bitwarden::bitwarden-layout heading="Mitglieder verwalten" subheading="Bitwarden Mitglieder">
-    <flux:card class="glass-card">
-        <div class="flex items-center justify-between mb-6">
-            <flux:heading size="lg">Mitglieder</flux:heading>
+<x-intranet-app-bitwarden::bitwarden-layout heading="Mitglieder" subheading="Bitwarden-Mitglieder einladen, bestätigen und entfernen." icon="users">
+    <div class="glass-card sticky top-3 z-20 space-y-3 p-3" style="--glass-opacity: 0.92">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div class="min-w-0 flex-1">
+                <flux:input
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="Mitglieder durchsuchen …"
+                    icon="magnifying-glass"
+                    aria-label="Mitglieder durchsuchen"
+                    clearable
+                />
+            </div>
             <flux:button href="{{ route('apps.bitwarden.admin.members.invite') }}" variant="primary" icon="plus">
                 Mitglied einladen
             </flux:button>
         </div>
-
-        <div class="flex flex-wrap items-center gap-4 mb-6">
-            <flux:input
-                wire:model.live.debounce.300ms="search"
-                placeholder="Mitglieder durchsuchen..."
-                icon="magnifying-glass"
-                class="flex-1 min-w-64"
-            />
-            <flux:checkbox wire:model.live="onlyCompleteUsers" label="Nur vollständige User" />
-            <flux:checkbox wire:model.live="onlyRecoveryEnrolled" label="Nur mit Account Recovery" />
-            <flux:checkbox wire:model.live="onlyNeedsConfirm" label="Nur unbestätigt" />
-            <flux:checkbox wire:model.live="includeCollections" label="Collections anzeigen" />
-            <flux:checkbox wire:model.live="includeGroups" label="Gruppen anzeigen" />
+        <div class="flex flex-wrap gap-1.5 border-t border-[#d0e3f9] pt-3 dark:border-white/10">
+            <x-intranet-app-bitwarden::pill :active="$this->onlyCompleteUsers" wire:click="$toggle('onlyCompleteUsers')">Nur vollständige User</x-intranet-app-bitwarden::pill>
+            <x-intranet-app-bitwarden::pill :active="$this->onlyRecoveryEnrolled" wire:click="$toggle('onlyRecoveryEnrolled')">Nur mit Account Recovery</x-intranet-app-bitwarden::pill>
+            <x-intranet-app-bitwarden::pill :active="$this->onlyNeedsConfirm" wire:click="$toggle('onlyNeedsConfirm')">Nur unbestätigt</x-intranet-app-bitwarden::pill>
+            <x-intranet-app-bitwarden::pill :active="$this->includeCollections" wire:click="$toggle('includeCollections')">Collections anzeigen</x-intranet-app-bitwarden::pill>
+            <x-intranet-app-bitwarden::pill :active="$this->includeGroups" wire:click="$toggle('includeGroups')">Gruppen anzeigen</x-intranet-app-bitwarden::pill>
         </div>
+    </div>
 
-        @if(config('app.debug') && !empty($this->members))
-            <flux:callout variant="info" class="mb-4">
-                <div class="text-xs">
-                    <strong>Debug Info:</strong><br>
-                    Members Count: {{ count($this->members) }}<br>
-                    Filtered Count: {{ $this->filteredMembers->total() }}<br>
-                    First Member: {{ json_encode($this->members[0] ?? null, JSON_PRETTY_PRINT) }}
-                </div>
-            </flux:callout>
-        @endif
+    @if(config('app.debug') && !empty($this->members))
+        <x-intranet-app-bitwarden::note icon="information-circle" title="Debug">
+            Mitglieder: {{ count($this->members) }} · Gefiltert: {{ $this->filteredMembers->total() }}
+        </x-intranet-app-bitwarden::note>
+    @endif
 
-        @if($loading && empty($this->members))
+    @if($loading && empty($this->members))
+        <x-intranet-app-bitwarden::section icon="users" title="Mitglieder" description="Die Mitglieder werden geladen.">
             <div class="flex items-center justify-center py-12">
-                <flux:icon.loading class="h-8 w-8" />
+                <flux:icon.loading class="size-8 text-[#073070] dark:text-white" />
             </div>
-        @elseif($this->filteredMembers->isEmpty())
-            <flux:callout variant="info" icon="information-circle">
-                @if(empty($search))
-                    Keine Mitglieder gefunden.
-                    @if(config('app.debug'))
-                        <div class="mt-2 text-xs">
-                            Debug: members count = {{ count($this->members ?? []) }},
-                            filtered count = {{ $this->filteredMembers->total() }}
-                        </div>
-                    @endif
-                @else
-                    Keine Mitglieder gefunden, die "{{ $search }}" enthalten.
+        </x-intranet-app-bitwarden::section>
+    @elseif($this->filteredMembers->isEmpty())
+        <x-intranet-app-bitwarden::empty icon="users" title="Keine Mitglieder">
+            @if(empty($search))
+                Keine Mitglieder gefunden.
+                @if(config('app.debug'))
+                    <span class="mt-2 block text-xs">
+                        Debug: members count = {{ count($this->members ?? []) }},
+                        filtered count = {{ $this->filteredMembers->total() }}
+                    </span>
                 @endif
-            </flux:callout>
-        @else
+            @else
+                Keine Mitglieder gefunden, die „{{ $search }}“ enthalten.
+            @endif
+        </x-intranet-app-bitwarden::empty>
+    @else
+        <x-intranet-app-bitwarden::section icon="users" title="Mitglieder" description="{{ $this->filteredMembers->total() }} {{ $this->filteredMembers->total() === 1 ? 'Mitglied' : 'Mitglieder' }}">
             <flux:table :paginate="$this->filteredMembers">
                 <flux:table.columns>
                     <flux:table.column>Name</flux:table.column>
@@ -474,7 +474,7 @@ mount(function () {
                     @endforeach
                 </flux:table.rows>
             </flux:table>
-        @endif
-    </flux:card>
+        </x-intranet-app-bitwarden::section>
+    @endif
 </x-intranet-app-bitwarden::bitwarden-layout>
 </div>

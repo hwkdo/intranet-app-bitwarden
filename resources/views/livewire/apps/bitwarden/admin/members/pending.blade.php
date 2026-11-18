@@ -199,15 +199,17 @@ mount(function (): void {
 ?>
 
 <div>
-<x-intranet-app-bitwarden::bitwarden-layout heading="Unbestätigte Mitglieder" subheading="Bitwarden Confirm">
-    <flux:card class="glass-card">
-        <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <div>
-                <flux:heading size="lg">Unbestätigte Mitglieder</flux:heading>
-                <flux:text class="text-sm text-gray-600 dark:text-gray-400">
-                    Automatische Bestätigung alle 15 Minuten.
-                    UI-Markierung „lange unbestätigt“ nach {{ $this->staleDays }} Tagen.
-                </flux:text>
+<x-intranet-app-bitwarden::bitwarden-layout heading="Unbestätigte Mitglieder" subheading="Automatische Bestätigung alle 15 Minuten. Die Markierung „lange unbestätigt“ erscheint nach {{ $this->staleDays }} Tagen." icon="clock">
+    <div class="glass-card sticky top-3 z-20 p-3" style="--glass-opacity: 0.92">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div class="min-w-0 flex-1">
+                <flux:input
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="E-Mail oder Name …"
+                    icon="magnifying-glass"
+                    aria-label="Unbestätigte Mitglieder durchsuchen"
+                    clearable
+                />
             </div>
             <div class="flex flex-wrap gap-2">
                 <flux:button wire:click="loadPending" icon="arrow-path" :disabled="$loading">
@@ -218,25 +220,20 @@ mount(function (): void {
                 </flux:button>
             </div>
         </div>
+    </div>
 
-        <div class="mb-6">
-            <flux:input
-                wire:model.live.debounce.300ms="search"
-                placeholder="E-Mail oder Name…"
-                icon="magnifying-glass"
-                class="max-w-md"
-            />
-        </div>
-
-        @if($loading && empty($pending))
+    @if($loading && empty($pending))
+        <x-intranet-app-bitwarden::section icon="clock" title="Unbestätigte Mitglieder" description="Die Liste wird geladen.">
             <div class="flex items-center justify-center py-12">
-                <flux:icon.loading class="h-8 w-8" />
+                <flux:icon.loading class="size-8 text-[#073070] dark:text-white" />
             </div>
-        @elseif($this->filteredPending->isEmpty())
-            <flux:callout variant="success" icon="check-circle">
-                Keine unbestätigten Mitglieder.
-            </flux:callout>
-        @else
+        </x-intranet-app-bitwarden::section>
+    @elseif($this->filteredPending->isEmpty())
+        <x-intranet-app-bitwarden::empty icon="check-circle" title="Keine unbestätigten Mitglieder">
+            Aktuell wartet niemand auf eine Bestätigung.
+        </x-intranet-app-bitwarden::empty>
+    @else
+        <x-intranet-app-bitwarden::section icon="clock" title="Unbestätigte Mitglieder" description="{{ $this->filteredPending->total() }} {{ $this->filteredPending->total() === 1 ? 'Mitglied' : 'Mitglieder' }}">
             <flux:table :paginate="$this->filteredPending">
                 <flux:table.columns>
                     <flux:table.column>Name</flux:table.column>
@@ -252,18 +249,18 @@ mount(function (): void {
                             <flux:table.cell>{{ $this->memberDisplayName($member) }}</flux:table.cell>
                             <flux:table.cell>{{ $member['email'] ?? '–' }}</flux:table.cell>
                             <flux:table.cell>
-                                <flux:badge size="sm" :color="$this->memberCanConfirm($member) ? 'amber' : 'zinc'">
+                                <flux:badge size="sm" :variant="$this->memberCanConfirm($member) ? 'warning' : 'neutral'">
                                     {{ $this->memberStatusLabel($member) }}
                                 </flux:badge>
                             </flux:table.cell>
                             <flux:table.cell>{{ $this->intranetUserEmail($member) ?? '–' }}</flux:table.cell>
                             <flux:table.cell>
                                 @if($this->isStale($member))
-                                    <flux:badge size="sm" color="red">Lange unbestätigt</flux:badge>
+                                    <flux:badge size="sm" variant="danger">Lange unbestätigt</flux:badge>
                                 @elseif(! $this->memberCanConfirm($member))
-                                    <flux:text class="text-sm text-gray-500">Wartet auf Registrierung</flux:text>
+                                    <span class="text-sm text-slate-600 dark:text-white/70">Wartet auf Registrierung</span>
                                 @else
-                                    <flux:text class="text-sm text-gray-500">Bereit für Confirm</flux:text>
+                                    <span class="text-sm text-slate-600 dark:text-white/70">Bereit für Confirm</span>
                                 @endif
                             </flux:table.cell>
                             <flux:table.cell>
@@ -296,7 +293,7 @@ mount(function (): void {
                     @endforeach
                 </flux:table.rows>
             </flux:table>
-        @endif
-    </flux:card>
+        </x-intranet-app-bitwarden::section>
+    @endif
 </x-intranet-app-bitwarden::bitwarden-layout>
 </div>

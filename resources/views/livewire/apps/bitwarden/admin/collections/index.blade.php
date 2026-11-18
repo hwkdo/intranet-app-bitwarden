@@ -193,35 +193,40 @@ mount(function () {
 
 ?>
 <div>
-<x-intranet-app-bitwarden::bitwarden-layout heading="Collections verwalten" subheading="Bitwarden Collections">
-    <flux:card class="glass-card">
-        <div class="flex items-center justify-between mb-6">
-            <flux:heading size="lg">Collections</flux:heading>
+<x-intranet-app-bitwarden::bitwarden-layout heading="Collections" subheading="Bitwarden-Collections anlegen, prüfen und entfernen." icon="folder">
+    <div class="glass-card sticky top-3 z-20 p-3" style="--glass-opacity: 0.92">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div class="min-w-0 flex-1">
+                <flux:input
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="Collections durchsuchen …"
+                    icon="magnifying-glass"
+                    aria-label="Collections durchsuchen"
+                    clearable
+                />
+            </div>
             <flux:button href="{{ route('apps.bitwarden.admin.collections.create') }}" variant="primary" icon="plus">
                 Neue Collection
             </flux:button>
         </div>
+    </div>
 
-        <flux:input
-            wire:model.live.debounce.300ms="search"
-            placeholder="Collections durchsuchen..."
-            icon="magnifying-glass"
-            class="mb-6"
-        />
-
-        @if($loading && empty($this->collections))
+    @if($loading && empty($this->collections))
+        <x-intranet-app-bitwarden::section icon="folder" title="Collections" description="Die Collections werden geladen.">
             <div class="flex items-center justify-center py-12">
-                <flux:icon.loading class="h-8 w-8" />
+                <flux:icon.loading class="size-8 text-[#073070] dark:text-white" />
             </div>
-        @elseif(empty($this->filteredCollections))
-            <flux:callout variant="info" icon="information-circle">
-                @if(empty($search))
-                    Keine Collections gefunden.
-                @else
-                    Keine Collections gefunden, die "{{ $search }}" enthalten.
-                @endif
-            </flux:callout>
-        @else
+        </x-intranet-app-bitwarden::section>
+    @elseif(empty($this->filteredCollections))
+        <x-intranet-app-bitwarden::empty icon="folder" title="Keine Collections">
+            @if(empty($search))
+                Keine Collections gefunden.
+            @else
+                Keine Collections gefunden, die „{{ $search }}“ enthalten.
+            @endif
+        </x-intranet-app-bitwarden::empty>
+    @else
+        <x-intranet-app-bitwarden::section icon="folder" title="Collections" description="{{ count($this->filteredCollections) }} {{ count($this->filteredCollections) === 1 ? 'Collection' : 'Collections' }}">
             <flux:table>
                 <flux:table.columns>
                     <flux:table.column>Name</flux:table.column>
@@ -295,8 +300,7 @@ mount(function () {
                     @endforeach
                 </flux:table.rows>
             </flux:table>
-        @endif
-    </flux:card>
+        </x-intranet-app-bitwarden::section>
+    @endif
 </x-intranet-app-bitwarden::bitwarden-layout>
-
 </div>

@@ -34,47 +34,31 @@ mount(function (string $collectionId) {
 
 ?>
 <div>
-<x-intranet-app-bitwarden::bitwarden-layout heading="Collection anzeigen" subheading="Bitwarden Collections">
+<x-intranet-app-bitwarden::bitwarden-layout heading="Collection" subheading="Details der Bitwarden-Collection." icon="folder">
     @if($loading)
-        <flux:card class="glass-card">
+        <x-intranet-app-bitwarden::section icon="folder" title="Collection" description="Die Collection wird geladen.">
             <div class="flex items-center justify-center py-12">
-                <flux:icon.loading class="h-8 w-8" />
+                <flux:icon.loading class="size-8 text-[#073070] dark:text-white" />
             </div>
-        </flux:card>
+        </x-intranet-app-bitwarden::section>
     @elseif($collection)
-        <flux:card class="glass-card">
-            <div class="space-y-6">
-                <div>
-                    <flux:heading size="lg">{{ $collection['name'] ?? 'Unbenannt' }}</flux:heading>
-                </div>
+        <x-intranet-app-bitwarden::section icon="folder" :title="$collection['name'] ?? 'Unbenannt'" description="Zugriff und Zuordnung dieser Collection.">
+            <div class="divide-y divide-[#d0e3f9] px-5 dark:divide-white/10">
+                <x-intranet-app-bitwarden::row label="External ID">
+                    {{ $collection['externalId'] ?? '-' }}
+                </x-intranet-app-bitwarden::row>
+                <x-intranet-app-bitwarden::row label="Anzahl Gruppen">
+                    {{ count($collection['groups'] ?? []) }}
+                </x-intranet-app-bitwarden::row>
+                <x-intranet-app-bitwarden::row label="Anzahl Benutzer">
+                    {{ count($collection['users'] ?? []) }}
+                </x-intranet-app-bitwarden::row>
+            </div>
+        </x-intranet-app-bitwarden::section>
 
-                <div class="grid gap-4 md:grid-cols-2">
-                    <div>
-                        <flux:label>External ID</flux:label>
-                        <div class="mt-1">
-                            <flux:text>{{ $collection['externalId'] ?? '-' }}</flux:text>
-                        </div>
-                    </div>
-
-                    <div>
-                        <flux:label>Anzahl Gruppen</flux:label>
-                        <div class="mt-1">
-                            <flux:text size="lg">{{ count($collection['groups'] ?? []) }}</flux:text>
-                        </div>
-                    </div>
-
-                    <div>
-                        <flux:label>Anzahl Benutzer</flux:label>
-                        <div class="mt-1">
-                            <flux:text size="lg">{{ count($collection['users'] ?? []) }}</flux:text>
-                        </div>
-                    </div>
-                </div>
-
-                @if(!empty($collection['groups']))
-                    <div>
-                        <flux:heading size="md" class="mb-4">Gruppen</flux:heading>
-                        <flux:table>
+        @if(!empty($collection['groups']))
+            <x-intranet-app-bitwarden::section icon="user-group" title="Gruppen" description="Gruppen mit Zugriff auf diese Collection.">
+                <flux:table>
                             <flux:table.columns>
                                 <flux:table.column>Gruppen-ID</flux:table.column>
                                 <flux:table.column>Read Only</flux:table.column>
@@ -114,14 +98,13 @@ mount(function (string $collectionId) {
                                     @endif
                                 @endforeach
                             </flux:table.rows>
-                        </flux:table>
-                    </div>
-                @endif
+                </flux:table>
+            </x-intranet-app-bitwarden::section>
+        @endif
 
-                @if(!empty($collection['users']))
-                    <div>
-                        <flux:heading size="md" class="mb-4">Benutzer</flux:heading>
-                        <flux:table>
+        @if(!empty($collection['users']))
+            <x-intranet-app-bitwarden::section icon="users" title="Benutzer" description="Benutzer mit Zugriff auf diese Collection.">
+                <flux:table>
                             <flux:table.columns>
                                 <flux:table.column>Benutzer-ID</flux:table.column>
                                 <flux:table.column>Read Only</flux:table.column>
@@ -161,20 +144,22 @@ mount(function (string $collectionId) {
                                     @endif
                                 @endforeach
                             </flux:table.rows>
-                        </flux:table>
-                    </div>
-                @endif
+                </flux:table>
+            </x-intranet-app-bitwarden::section>
+        @endif
 
-                <div class="flex items-center justify-end gap-3 pt-4 border-t">
-                    <flux:button href="{{ route('apps.bitwarden.admin.collections.index') }}" variant="ghost" wire:navigate>
-                        Zurück
-                    </flux:button>
-                    <flux:button href="{{ route('apps.bitwarden.admin.collections.edit', $collectionId) }}" variant="primary" wire:navigate>
-                        Bearbeiten
-                    </flux:button>
-                </div>
-            </div>
-        </flux:card>
+        <div class="flex items-center justify-end gap-3">
+            <flux:button href="{{ route('apps.bitwarden.admin.collections.index') }}" variant="ghost" wire:navigate>
+                Zurück
+            </flux:button>
+            <flux:button href="{{ route('apps.bitwarden.admin.collections.edit', $collectionId) }}" variant="primary" wire:navigate>
+                Bearbeiten
+            </flux:button>
+        </div>
+    @else
+        <x-intranet-app-bitwarden::empty icon="folder" title="Collection nicht gefunden">
+            Die angeforderte Collection ist nicht vorhanden.
+        </x-intranet-app-bitwarden::empty>
     @endif
 </x-intranet-app-bitwarden::bitwarden-layout>
 </div>

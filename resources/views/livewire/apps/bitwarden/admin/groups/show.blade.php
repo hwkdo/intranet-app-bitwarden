@@ -71,44 +71,32 @@ mount(function (string $groupId) {
 
 ?>
 <div>
-<x-intranet-app-bitwarden::bitwarden-layout heading="Gruppe anzeigen" subheading="Bitwarden Gruppen">
+<x-intranet-app-bitwarden::bitwarden-layout heading="Gruppe" subheading="Details der Bitwarden-Gruppe." icon="user-group">
     @if($loading)
-        <flux:card class="glass-card">
+        <x-intranet-app-bitwarden::section icon="user-group" title="Gruppe" description="Die Gruppe wird geladen.">
             <div class="flex items-center justify-center py-12">
-                <flux:icon.loading class="h-8 w-8" />
+                <flux:icon.loading class="size-8 text-[#073070] dark:text-white" />
             </div>
-        </flux:card>
+        </x-intranet-app-bitwarden::section>
     @elseif($group)
-        <flux:card class="glass-card">
-            <div class="space-y-6">
-                <div>
-                    <flux:heading size="lg">{{ $group['name'] ?? 'Unbenannt' }}</flux:heading>
-                </div>
+        <x-intranet-app-bitwarden::section icon="user-group" :title="$group['name'] ?? 'Unbenannt'" description="Zugriff und Mitglieder dieser Gruppe.">
+            <div class="divide-y divide-[#d0e3f9] px-5 dark:divide-white/10">
+                <x-intranet-app-bitwarden::row label="Zugriff auf alle Collections">
+                    @if($group['accessAll'] ?? false)
+                        <flux:badge variant="success" icon="check">Ja</flux:badge>
+                    @else
+                        <flux:badge variant="neutral">Nein</flux:badge>
+                    @endif
+                </x-intranet-app-bitwarden::row>
+                <x-intranet-app-bitwarden::row label="Anzahl Mitglieder">
+                    {{ count($groupUserIds) }}
+                </x-intranet-app-bitwarden::row>
+            </div>
+        </x-intranet-app-bitwarden::section>
 
-                <div class="grid gap-4 md:grid-cols-2">
-                    <div>
-                        <flux:label>Zugriff auf alle Collections</flux:label>
-                        <div class="mt-1">
-                            @if($group['accessAll'] ?? false)
-                                <flux:badge variant="success" icon="check">Ja</flux:badge>
-                            @else
-                                <flux:badge variant="neutral">Nein</flux:badge>
-                            @endif
-                        </div>
-                    </div>
-
-                    <div>
-                        <flux:label>Anzahl Mitglieder</flux:label>
-                        <div class="mt-1">
-                            <flux:text size="lg">{{ count($groupUserIds) }}</flux:text>
-                        </div>
-                    </div>
-                </div>
-
-                @if(!empty($groupUserIds))
-                    <div>
-                        <flux:heading size="md" class="mb-4">Mitglieder</flux:heading>
-                        <flux:table>
+        @if(!empty($groupUserIds))
+            <x-intranet-app-bitwarden::section icon="users" title="Mitglieder" description="{{ count($groupUserIds) }} {{ count($groupUserIds) === 1 ? 'Mitglied' : 'Mitglieder' }}">
+                <flux:table>
                             <flux:table.columns>
                                 <flux:table.column>Name</flux:table.column>
                                 <flux:table.column>E-Mail</flux:table.column>
@@ -128,20 +116,22 @@ mount(function (string $groupId) {
                                     </flux:table.row>
                                 @endforeach
                             </flux:table.rows>
-                        </flux:table>
-                    </div>
-                @endif
+                </flux:table>
+            </x-intranet-app-bitwarden::section>
+        @endif
 
-                <div class="flex items-center justify-end gap-3 pt-4 border-t">
-                    <flux:button href="{{ route('apps.bitwarden.admin.groups.index') }}" variant="ghost" wire:navigate>
-                        Zurück
-                    </flux:button>
-                    <flux:button href="{{ route('apps.bitwarden.admin.groups.edit', $groupId) }}" variant="primary" wire:navigate>
-                        Bearbeiten
-                    </flux:button>
-                </div>
-            </div>
-        </flux:card>
+        <div class="flex items-center justify-end gap-3">
+            <flux:button href="{{ route('apps.bitwarden.admin.groups.index') }}" variant="ghost" wire:navigate>
+                Zurück
+            </flux:button>
+            <flux:button href="{{ route('apps.bitwarden.admin.groups.edit', $groupId) }}" variant="primary" wire:navigate>
+                Bearbeiten
+            </flux:button>
+        </div>
+    @else
+        <x-intranet-app-bitwarden::empty icon="user-group" title="Gruppe nicht gefunden">
+            Die angeforderte Gruppe ist nicht vorhanden.
+        </x-intranet-app-bitwarden::empty>
     @endif
 </x-intranet-app-bitwarden::bitwarden-layout>
 </div>

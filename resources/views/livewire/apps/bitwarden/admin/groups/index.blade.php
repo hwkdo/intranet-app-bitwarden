@@ -137,53 +137,53 @@ mount(function () {
 
 ?>
 <div>
-<x-intranet-app-bitwarden::bitwarden-layout heading="Gruppen verwalten" subheading="Bitwarden Gruppen">
-    <flux:card class="glass-card">
-        <div class="flex items-center justify-between mb-6">
-            <flux:heading size="lg">Gruppen</flux:heading>
+<x-intranet-app-bitwarden::bitwarden-layout heading="Gruppen" subheading="Bitwarden-Gruppen anlegen, prüfen und entfernen." icon="user-group">
+    <div class="glass-card sticky top-3 z-20 p-3" style="--glass-opacity: 0.92">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div class="min-w-0 flex-1">
+                <flux:input
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="Gruppen durchsuchen …"
+                    icon="magnifying-glass"
+                    aria-label="Gruppen durchsuchen"
+                    clearable
+                />
+            </div>
             <flux:button href="{{ route('apps.bitwarden.admin.groups.create') }}" variant="primary" icon="plus">
                 Neue Gruppe
             </flux:button>
         </div>
+    </div>
 
-        <flux:input
-            wire:model.live.debounce.300ms="search"
-            placeholder="Gruppen durchsuchen..."
-            icon="magnifying-glass"
-            class="mb-6"
-        />
+    @if(config('app.debug') && !empty($this->groups))
+        <x-intranet-app-bitwarden::note icon="information-circle" title="Debug">
+            Gruppen: {{ count($this->groups) }} · Gefiltert: {{ count($this->filteredGroups ?? []) }}
+        </x-intranet-app-bitwarden::note>
+    @endif
 
-        @if(config('app.debug') && !empty($this->groups))
-            <flux:callout variant="info" class="mb-4">
-                <div class="text-xs">
-                    <strong>Debug Info:</strong><br>
-                    Groups Count: {{ count($this->groups) }}<br>
-                    Filtered Count: {{ count($this->filteredGroups ?? []) }}<br>
-                    First Group: {{ json_encode($this->groups[0] ?? null, JSON_PRETTY_PRINT) }}
-                </div>
-            </flux:callout>
-        @endif
-
-        @if($loading && empty($this->groups))
+    @if($loading && empty($this->groups))
+        <x-intranet-app-bitwarden::section icon="user-group" title="Gruppen" description="Die Gruppen werden geladen.">
             <div class="flex items-center justify-center py-12">
-                <flux:icon.loading class="h-8 w-8" />
+                <flux:icon.loading class="size-8 text-[#073070] dark:text-white" />
             </div>
-        @elseif(empty($this->filteredGroups))
-            <flux:callout variant="info" icon="information-circle">
-                @if(empty($search))
-                    Keine Gruppen gefunden.
-                    @if(config('app.debug'))
-                        <div class="mt-2 text-xs">
-                            Debug: groups count = {{ count($this->groups ?? []) }}, 
-                            filtered count = {{ count($this->filteredGroups ?? []) }},
-                            raw response type = {{ gettype($this->groups ?? []) }}
-                        </div>
-                    @endif
-                @else
-                    Keine Gruppen gefunden, die "{{ $search }}" enthalten.
+        </x-intranet-app-bitwarden::section>
+    @elseif(empty($this->filteredGroups))
+        <x-intranet-app-bitwarden::empty icon="user-group" title="Keine Gruppen">
+            @if(empty($search))
+                Keine Gruppen gefunden.
+                @if(config('app.debug'))
+                    <span class="mt-2 block text-xs">
+                        Debug: groups count = {{ count($this->groups ?? []) }},
+                        filtered count = {{ count($this->filteredGroups ?? []) }},
+                        raw response type = {{ gettype($this->groups ?? []) }}
+                    </span>
                 @endif
-            </flux:callout>
-        @else
+            @else
+                Keine Gruppen gefunden, die „{{ $search }}“ enthalten.
+            @endif
+        </x-intranet-app-bitwarden::empty>
+    @else
+        <x-intranet-app-bitwarden::section icon="user-group" title="Gruppen" description="{{ count($this->filteredGroups) }} {{ count($this->filteredGroups) === 1 ? 'Gruppe' : 'Gruppen' }}">
             <flux:table>
                 <flux:table.columns>
                     <flux:table.column>Name</flux:table.column>
@@ -249,7 +249,7 @@ mount(function () {
                     @endforeach
                 </flux:table.rows>
             </flux:table>
-        @endif
-    </flux:card>
+        </x-intranet-app-bitwarden::section>
+    @endif
 </x-intranet-app-bitwarden::bitwarden-layout>
 </div>
